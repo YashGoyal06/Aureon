@@ -1,9 +1,0 @@
-# env
-.env
-backend/.env
-frontend/.env
-
-# python venv
-venv/
-backend/venv/
-.venv/
