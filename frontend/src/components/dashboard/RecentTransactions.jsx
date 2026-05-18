@@ -1,9 +1,27 @@
 // src/components/dashboard/RecentTransactions.jsx
-import React from 'react';
-import { ChevronRight, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { DUMMY_TRANSACTIONS } from '../../data/dummyData';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronRight, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
+import { apiFetch } from '../../lib/api';
 
 const RecentTransactions = () => {
+  const navigate = useNavigate();
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const data = await apiFetch('/finance/transactions/');
+        setTransactions(data);
+      } catch (err) {
+        console.error("Failed to fetch transactions", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTransactions();
+  }, []);
   const getCategoryIcon = (categoryKey) => {
     const icons = {
       dining: '🍔',
@@ -36,13 +54,23 @@ const RecentTransactions = () => {
       <div className="bg-black/40 backdrop-blur-xl rounded-2xl shadow-2xl p-4 sm:p-6 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 h-full flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">Recent Transactions</h2>
-          <button className="text-sm text-emerald-400 hover:text-emerald-300 font-medium flex items-center transition-colors duration-300">
+          <button 
+            onClick={() => navigate('/transactions')}
+            className="text-sm text-emerald-400 hover:text-emerald-300 font-medium flex items-center transition-colors duration-300"
+          >
             View All <ChevronRight size={16} className="ml-1" />
           </button>
         </div>
 
         <div className="space-y-3 overflow-y-auto flex-1">
-          {DUMMY_TRANSACTIONS.slice(0, 4).map((transaction) => (
+          {loading ? (
+            <div className="flex justify-center items-center h-32">
+              <Loader2 className="animate-spin text-emerald-400" size={32} />
+            </div>
+          ) : transactions.length === 0 ? (
+            <div className="text-center text-gray-400 mt-8">No recent transactions.</div>
+          ) : (
+            transactions.slice(0, 4).map((transaction) => (
             <div
               key={transaction.id}
               className="flex items-center justify-between p-3 sm:p-4 hover:bg-white/5 rounded-xl transition-all duration-300 cursor-pointer border border-white/10 hover:border-emerald-500/30 backdrop-blur-sm"
@@ -75,7 +103,7 @@ const RecentTransactions = () => {
                   <p className={`font-semibold text-sm sm:text-base ${
                     transaction.amount > 0 ? 'text-emerald-400' : 'text-white'
                   }`}>
-                    {transaction.amount > 0 ? '+' : ''}{transaction.amount < 0 ? '-' : ''}$
+                    {transaction.amount > 0 ? '+' : ''}{transaction.amount < 0 ? '-' : ''}₹
                     {Math.abs(transaction.amount).toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-400 hidden sm:block">{transaction.paymentMethod}</p>
@@ -87,10 +115,13 @@ const RecentTransactions = () => {
                 )}
               </div>
             </div>
-          ))}
+          )))}
         </div>
 
-        <button className="w-full mt-4 py-2 text-sm text-gray-400 hover:text-white font-medium border border-white/10 rounded-xl hover:bg-white/5 hover:border-emerald-500/30 transition-all duration-300 backdrop-blur-sm">
+        <button 
+          onClick={() => navigate('/transactions')}
+          className="w-full mt-4 py-2 text-sm text-gray-400 hover:text-white font-medium border border-white/10 rounded-xl hover:bg-white/5 hover:border-emerald-500/30 transition-all duration-300 backdrop-blur-sm"
+        >
           View All Transactions
         </button>
       </div>
