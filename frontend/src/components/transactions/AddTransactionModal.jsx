@@ -1,7 +1,8 @@
 // src/components/transactions/AddTransactionModal.jsx
 import React, { useState } from 'react';
 import { X, Camera, Upload, Check } from 'lucide-react';
-import { CATEGORIES, PAYMENT_METHODS } from '../../data/dummyData';
+import { CATEGORIES, PAYMENT_METHODS } from '../../data/config';
+import { apiFetch } from '../../lib/api';
 
 const AddTransactionModal = ({ onClose }) => {
   const [step, setStep] = useState(1);
@@ -17,12 +18,30 @@ const AddTransactionModal = ({ onClose }) => {
     addToBudget: true
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setStep(2); // Show success message
-    setTimeout(() => {
-      onClose();
-    }, 1500);
+    try {
+      const amount = formData.type === 'expense' ? -Math.abs(parseFloat(formData.amount)) : Math.abs(parseFloat(formData.amount));
+      await apiFetch('/finance/transactions/', {
+        method: 'POST',
+        body: JSON.stringify({
+          merchant: formData.merchant,
+          amount: amount,
+          category: CATEGORIES.find(c => c.key === formData.category)?.name || formData.category,
+          category_key: formData.category,
+          date: formData.date,
+          payment_method: formData.paymentMethod,
+          note: formData.notes
+        })
+      });
+      setStep(2); // Show success message
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (error) {
+      console.error("Failed to add transaction", error);
+      alert("Error adding transaction: " + error.message);
+    }
   };
 
   const getCategoryIcon = (key) => {
@@ -43,54 +62,47 @@ const AddTransactionModal = ({ onClose }) => {
 
   if (step === 2) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl p-8 max-w-md w-full text-center animate-fade-in">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check size={32} className="text-green-600" />
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div className="bg-black border border-emerald-500/30 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl shadow-emerald-500/10">
+          <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-4 animate-scale-in">
+            <Check size={32} className="text-emerald-400" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Transaction Saved!</h2>
-          <p className="text-gray-600">Your transaction has been added successfully</p>
-          
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-700">
-              <span className="font-semibold">Quick Insight:</span> This is your 3rd restaurant meal this week ($38 total). 
-              Your weekly dining goal is $50. $12 remaining for this week.
-            </p>
-          </div>
+          <h2 className="text-2xl font-bold text-white mb-2 animate-pulse">Transaction Saved!</h2>
+          <p className="text-gray-400">Your transaction has been added successfully</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl max-w-2xl w-full my-8 animate-slide-in">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-black/90 border border-white/10 rounded-2xl max-w-2xl w-full my-8 shadow-2xl overflow-hidden animate-slide-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-800">Add Transaction</h2>
+        <div className="flex items-center justify-between p-6 border-b border-white/10">
+          <h2 className="text-xl font-bold text-white">Add Transaction</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition"
+            className="p-2 hover:bg-white/5 rounded-lg transition-colors duration-300"
           >
-            <X size={24} className="text-gray-600" />
+            <X size={20} className="text-gray-400 hover:text-white" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
           {/* Type Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Transaction Type
             </label>
             <div className="flex space-x-4">
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, type: 'expense' })}
-                className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition ${
+                className={`flex-1 py-3 px-4 rounded-xl border font-medium transition-all duration-300 ${
                   formData.type === 'expense'
-                    ? 'border-red-500 bg-red-50 text-red-700'
-                    : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                    ? 'border-red-500/50 bg-red-500/10 text-red-400 shadow-lg shadow-red-500/5'
+                    : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-white'
                 }`}
               >
                 Expense
@@ -98,10 +110,10 @@ const AddTransactionModal = ({ onClose }) => {
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, type: 'income' })}
-                className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition ${
+                className={`flex-1 py-3 px-4 rounded-xl border font-medium transition-all duration-300 ${
                   formData.type === 'income'
-                    ? 'border-green-500 bg-green-50 text-green-700'
-                    : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 shadow-lg shadow-emerald-500/5'
+                    : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-white'
                 }`}
               >
                 Income
@@ -111,13 +123,11 @@ const AddTransactionModal = ({ onClose }) => {
 
           {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Amount
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">
-                $
-              </span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">₹</span>
               <input
                 type="number"
                 step="0.01"
@@ -125,14 +135,14 @@ const AddTransactionModal = ({ onClose }) => {
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 placeholder="0.00"
                 required
-                className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg"
+                className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50 transition-colors duration-300 text-lg"
               />
             </div>
           </div>
 
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Category
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -143,15 +153,15 @@ const AddTransactionModal = ({ onClose }) => {
                   key={category.id}
                   type="button"
                   onClick={() => setFormData({ ...formData, category: category.key })}
-                  className={`p-3 rounded-lg border-2 text-left transition ${
+                  className={`p-3 rounded-xl border text-left transition-all duration-300 ${
                     formData.category === category.key
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-300 hover:border-gray-400'
+                      ? 'border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/5'
+                      : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
                   }`}
                 >
                   <div className="flex items-center space-x-2">
-                    <span className="text-2xl">{getCategoryIcon(category.key)}</span>
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-xl">{getCategoryIcon(category.key)}</span>
+                    <span className="text-sm font-medium text-white">
                       {category.name}
                     </span>
                   </div>
@@ -162,7 +172,7 @@ const AddTransactionModal = ({ onClose }) => {
 
           {/* Merchant/Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Merchant / Description
             </label>
             <input
@@ -170,14 +180,15 @@ const AddTransactionModal = ({ onClose }) => {
               value={formData.merchant}
               onChange={(e) => setFormData({ ...formData, merchant: e.target.value })}
               placeholder="e.g., Starbucks, Salary, etc."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              required
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50 transition-colors duration-300"
             />
           </div>
 
           {/* Date and Payment Method Row */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Date
               </label>
               <input
@@ -185,21 +196,21 @@ const AddTransactionModal = ({ onClose }) => {
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50 transition-colors duration-300"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Payment Method
               </label>
               <select
                 value={formData.paymentMethod}
                 onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50 transition-colors duration-300"
               >
                 {PAYMENT_METHODS.map((method) => (
-                  <option key={method.id} value={method.type}>
+                  <option key={method.id} value={method.type} className="bg-black text-white">
                     {method.name}
                   </option>
                 ))}
@@ -209,85 +220,30 @@ const AddTransactionModal = ({ onClose }) => {
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Notes (Optional)
             </label>
             <textarea
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="Add any additional notes..."
-              rows="3"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+              rows="2"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-emerald-500/50 transition-colors duration-300 resize-none"
             />
-          </div>
-
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tags (Optional)
-            </label>
-            <input
-              type="text"
-              value={formData.tags}
-              onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-              placeholder="e.g., #lunch #friends"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            />
-          </div>
-
-          {/* Receipt Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Receipt (Optional)
-            </label>
-            <div className="flex space-x-3">
-              <button
-                type="button"
-                className="flex-1 flex items-center justify-center space-x-2 py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition"
-              >
-                <Camera size={20} className="text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">Take Photo</span>
-              </button>
-              <button
-                type="button"
-                className="flex-1 flex items-center justify-center space-x-2 py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition"
-              >
-                <Upload size={20} className="text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">Upload</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Add to Budget Checkbox */}
-          <div className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              checked={formData.addToBudget}
-              onChange={(e) => setFormData({ ...formData, addToBudget: e.target.checked })}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <label className="text-sm text-gray-700">
-              Add to budget tracking
-              {formData.category === 'dining' && formData.addToBudget && (
-                <span className="block text-xs text-gray-500 mt-1">
-                  Food & Dining: $185/$400 → ${(185 + parseFloat(formData.amount || 0)).toFixed(2)}/$400
-                </span>
-              )}
-            </label>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex space-x-4 pt-4">
+          <div className="flex space-x-4 pt-4 border-t border-white/10">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 px-4 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition"
+              className="flex-1 py-3 px-4 border border-white/10 hover:bg-white/5 text-white rounded-xl font-medium transition-colors duration-300"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+              className="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-xl font-medium transition-all duration-300 shadow-lg shadow-emerald-500/20"
             >
               Save Transaction
             </button>
