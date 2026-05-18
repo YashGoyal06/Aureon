@@ -1,35 +1,67 @@
 // src/components/dashboard/FinancialSnapshot.jsx
-import React from 'react';
-import { TrendingUp, Wallet, CreditCard, Target } from 'lucide-react';
-import { DUMMY_USER } from '../../data/dummyData';
+import React, { useState, useEffect } from 'react';
+import { TrendingUp, Wallet, CreditCard, Target, Loader2 } from 'lucide-react';
+import { apiFetch } from '../../lib/api';
 
 const FinancialSnapshot = () => {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await apiFetch('/auth/profile/');
+        setProfile(data.profile);
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="mb-8 bg-black/40 backdrop-blur-xl rounded-2xl p-6 flex justify-center items-center h-48 border border-white/10">
+        <Loader2 className="animate-spin text-emerald-500" size={40} />
+      </div>
+    );
+  }
+
+  const p = profile || {
+    cash_available: 0,
+    invested_amount: 0,
+    credit_used: 0,
+    credit_limit: 0,
+    net_worth: 0
+  };
   const stats = [
     {
       icon: Wallet,
       label: 'Cash Available',
-      value: `$${DUMMY_USER.cashAvailable.toLocaleString()}`,
+      value: `₹${parseFloat(p.cash_available || 0).toLocaleString()}`,
       color: 'blue',
       gradient: 'from-blue-500 to-cyan-600'
     },
     {
       icon: TrendingUp,
       label: 'Invested',
-      value: `$${DUMMY_USER.invested.toLocaleString()}`,
+      value: `₹${parseFloat(p.invested_amount || 0).toLocaleString()}`,
       color: 'green',
       gradient: 'from-emerald-500 to-teal-600'
     },
     {
       icon: CreditCard,
       label: 'Credit Used',
-      value: `$${DUMMY_USER.creditUsed}/$${DUMMY_USER.creditLimit.toLocaleString()}`,
+      value: `₹${parseFloat(p.credit_used || 0).toLocaleString()}/₹${parseFloat(p.credit_limit || 0).toLocaleString()}`,
       color: 'purple',
       gradient: 'from-purple-500 to-pink-600'
     },
     {
       icon: Target,
       label: 'Savings Goal',
-      value: `${DUMMY_USER.savingsGoalProgress}% complete`,
+      value: `Pending setup`,
       color: 'orange',
       gradient: 'from-orange-500 to-red-600'
     }
@@ -57,11 +89,11 @@ const FinancialSnapshot = () => {
             <TrendingUp size={20} />
           </div>
           <div className="text-4xl font-bold mb-2">
-            ${DUMMY_USER.netWorth.toLocaleString()}
+            ₹{parseFloat(p.net_worth || 0).toLocaleString()}
           </div>
           <div className="flex items-center space-x-2 text-sm">
             <TrendingUp size={16} />
-            <span>+$420 this month (3.98%)</span>
+            <span>+₹420 this month (3.98%)</span>
           </div>
         </div>
 
