@@ -1,8 +1,9 @@
 // src/pages/GoalsPage.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import Header from '../components/common/Header';
-import { DUMMY_USER, DUMMY_GOALS } from '../data/dummyData';
-import { Plus, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Minus, Loader2 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 const GoalsPage = () => {
   const getStatusIcon = (status) => {
@@ -15,6 +16,42 @@ const GoalsPage = () => {
         return <Minus size={20} className="text-blue-400" />;
     }
   };
+
+  const [goals, setGoals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchGoals = async () => {
+      try {
+        const data = await apiFetch('/finance/goals/');
+        setGoals(data);
+      } catch (err) {
+        console.error("Failed to fetch goals", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGoals();
+
+    const fetchUserData = async () => {
+      try {
+        const { data: { user: sessionUser } } = await supabase.auth.getUser();
+        if (sessionUser) {
+          const displayName = sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || 'User';
+          const photoURL = sessionUser.user_metadata?.avatar_url || sessionUser.user_metadata?.picture;
+          setUser({
+            name: displayName,
+            email: sessionUser.email,
+            avatar: photoURL
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+    fetchUserData();
+  }, []);
 
   return (
     <div className="min-h-screen relative">
@@ -30,7 +67,7 @@ const GoalsPage = () => {
       ></div>
 
       <div className="relative z-10">
-        <Header user={DUMMY_USER} />
+        <Header user={user} />
         
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-16">
           <div className="flex items-center justify-between mb-8">
@@ -44,8 +81,22 @@ const GoalsPage = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {DUMMY_GOALS.map((goal) => {
-              const percentage = (goal.current / goal.target) * 100;
+            {loading ? (
+              <div className="col-span-full flex justify-center items-center py-12">
+                <Loader2 className="animate-spin text-emerald-400" size={40} />
+              </div>
+            ) : goals.length === 0 ? (
+              <div className="col-span-full text-center text-gray-400 py-8">
+                No financial goals set yet. Create your first goal below!
+              </div>
+            ) : (
+              goals.map((goal) => {
+              const currentAmt = parseFloat(goal.current_amount);
+              const targetAmt = parseFloat(goal.target_amount);
+              const percentage = targetAmt > 0 ? (currentAmt / targetAmt) * 100 : 0;
+              const remaining = targetAmt - currentAmt;
+              // Simple logic for ahead/behind pace
+              const status = goal.priority === 'high' && percentage < 50 ? 'behind' : 'ahead'; 
               
               return (
                 <div key={goal.id} className="bg-black/40 backdrop-blur-xl rounded-2xl shadow-2xl p-6 hover:shadow-emerald-500/20 transition-all duration-300 border border-white/10 hover:border-emerald-500/30 group">
@@ -61,7 +112,7 @@ const GoalsPage = () => {
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span className="text-emerald-400 font-semibold">{percentage.toFixed(0)}%</span>
                       <span className="font-medium text-gray-300">
-                        ${goal.current.toLocaleString()} / ${goal.target.toLocaleString()}
+                        ₹{currentAmt.toLocaleString()} / ₹{targetAmt.toLocaleString()}
                       </span>
                     </div>
                     <div className="w-full bg-white/10 rounded-full h-4 border border-white/10 relative overflow-hidden">
@@ -81,38 +132,30 @@ const GoalsPage = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm bg-white/5 rounded-lg p-3 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
                       <span className="text-gray-300">Remaining</span>
-                      <span className="font-medium text-white">${goal.remaining.toLocaleString()}</span>
+                      <span className="font-medium text-white">₹{remaining.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm bg-white/5 rounded-lg p-3 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
                       <span className="text-gray-300">Deadline</span>
-                      <span className="font-medium text-white">{goal.deadline}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm bg-white/5 rounded-lg p-3 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
-                      <span className="text-gray-300">Time Left</span>
-                      <span className="font-medium text-white">{goal.timeLeft}</span>
+                      <span className="font-medium text-white">{goal.deadline || 'No deadline'}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm bg-white/5 rounded-lg p-3 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
                       <span className="text-gray-300">Monthly Target</span>
-                      <span className="font-medium text-white">${goal.monthlyTarget}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm bg-white/5 rounded-lg p-3 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
-                      <span className="text-gray-300">Current Pace</span>
-                      <span className="font-medium text-white">${goal.currentPace}/mo</span>
+                      <span className="font-medium text-white">₹{goal.monthly_target}</span>
                     </div>
 
                     <div className={`flex items-center space-x-2 p-3 rounded-lg border ${
-                      goal.status === 'ahead' ? 'bg-emerald-500/10 border-emerald-500/30' :
-                      goal.status === 'behind' ? 'bg-red-500/10 border-red-500/30' : 
+                      status === 'ahead' ? 'bg-emerald-500/10 border-emerald-500/30' :
+                      status === 'behind' ? 'bg-red-500/10 border-red-500/30' : 
                       'bg-blue-500/10 border-blue-500/30'
                     }`}>
-                      {getStatusIcon(goal.status)}
+                      {getStatusIcon(status)}
                       <span className={`font-medium ${
-                        goal.status === 'ahead' ? 'text-emerald-400' :
-                        goal.status === 'behind' ? 'text-red-400' : 'text-blue-400'
+                        status === 'ahead' ? 'text-emerald-400' :
+                        status === 'behind' ? 'text-red-400' : 'text-blue-400'
                       }`}>
-                        {goal.status === 'ahead' && `Ahead by ${goal.aheadBy}%`}
-                        {goal.status === 'behind' && `Behind by $${goal.behindBy}`}
-                        {goal.status === 'on-track' && 'On Track'}
+                        {status === 'ahead' && `Ahead of pace`}
+                        {status === 'behind' && `Behind pace`}
+                        {status === 'on-track' && 'On Track'}
                       </span>
                     </div>
                   </div>
@@ -127,7 +170,7 @@ const GoalsPage = () => {
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
 
           {/* Create New Goal Card */}
