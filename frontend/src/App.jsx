@@ -16,30 +16,57 @@ import GoalsPage from './pages/GoalsPage';
 import BillsPage from './pages/BillsPage';
 import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
+import TransactionsPage from './pages/TransactionsPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // Default to true for now to prevent getting stuck on onboarding during testing
-  const [isOnboarded, setIsOnboarded] = useState(true); 
+  const [isOnboarded, setIsOnboarded] = useState(false); 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // 1. Check for existing session on app load
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         setIsAuthenticated(true);
         localStorage.setItem('supabase_token', session.access_token);
+        try {
+          const res = await fetch('http://127.0.0.1:8000/api/auth/me/', {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setIsOnboarded(data.profile?.is_onboarded || false);
+          }
+        } catch (e) {
+          console.error("Failed to check onboarding status", e);
+        }
       }
       setLoading(false);
     });
 
     // 2. Listen for auth changes (e.g., Google redirect completion)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
         setIsAuthenticated(true);
         localStorage.setItem('supabase_token', session.access_token);
+        try {
+          const res = await fetch('http://127.0.0.1:8000/api/auth/me/', {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setIsOnboarded(data.profile?.is_onboarded || false);
+          }
+        } catch (e) {
+          console.error("Failed to check onboarding status", e);
+        }
       } else {
         setIsAuthenticated(false);
+        setIsOnboarded(false);
         localStorage.removeItem('supabase_token');
       }
       setLoading(false);
@@ -54,10 +81,16 @@ function App() {
     if (!isAuthenticated) {
       return <Navigate to="/login" replace />;
     }
-    // Only check onboarding if you have a way to verify it (e.g. from backend)
-    // For now, we allow access if authenticated.
     if (!isOnboarded) {
-       return <Navigate to="/onboarding" replace />;
+       return <Navigate to="/onboarding/profile" replace />;
+    }
+    return children;
+  };
+
+  const PublicRoute = ({ children }) => {
+    if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
+    if (isAuthenticated) {
+      return <Navigate to="/dashboard" replace />;
     }
     return children;
   };
@@ -70,8 +103,8 @@ function App() {
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} />} />
+        <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+        <Route path="/login" element={<PublicRoute><LoginPage setIsAuthenticated={setIsAuthenticated} /></PublicRoute>} />
         
         <Route 
           path="/two-factor" 
@@ -132,6 +165,14 @@ function App() {
           }
         />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route
+          path="/transactions"
+          element={
+            <ProtectedRoute>
+              <TransactionsPage />
+            </ProtectedRoute>
+          }
+        />
         {/* Redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
