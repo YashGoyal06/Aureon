@@ -1,13 +1,15 @@
 // src/pages/onboarding/DataImportPage.jsx
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, FileText, Table, Calendar, CheckCircle, Loader } from 'lucide-react';
+import { apiFetch } from '../../lib/api';
 
 const DataImportPage = ({ setIsOnboarded }) => {
   const navigate = useNavigate();
   const [selectedMethod, setSelectedMethod] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
+  const fileInputRef = useRef(null);
 
   const methods = [
     {
@@ -45,17 +47,43 @@ const DataImportPage = ({ setIsOnboarded }) => {
   };
 
   const handleFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
     setUploading(true);
-    setTimeout(() => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      await apiFetch('/importer/upload/', {
+        method: 'POST',
+        body: formData
+      });
       setUploading(false);
       setUploadComplete(true);
       setTimeout(() => {
         handleComplete();
       }, 2000);
-    }, 3000);
+    } catch (error) {
+      console.error("Upload error", error);
+      alert("Error uploading file: " + error.message);
+      setUploading(false);
+    }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    try {
+      await apiFetch('/auth/profile/', {
+        method: 'PATCH',
+        body: JSON.stringify({ is_onboarded: true })
+      });
+    } catch (e) {
+      console.error("Failed to update onboarding status in backend", e);
+    }
     setIsOnboarded(true);
     navigate('/dashboard');
   };
@@ -207,6 +235,13 @@ const DataImportPage = ({ setIsOnboarded }) => {
               >
                 Select Files
               </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden" 
+                accept=".csv,.xlsx,.xls,.pdf" 
+              />
             </div>
 
             <div className="mt-6 p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl backdrop-blur-sm">
