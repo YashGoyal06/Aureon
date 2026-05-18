@@ -1,19 +1,51 @@
-// src/pages/ChatPage.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/common/Header';
-import { DUMMY_USER } from '../data/dummyData';
-import { Send, Bot, User } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 const ChatPage = () => {
   const [messages, setMessages] = useState([
     {
       id: 1,
       sender: 'bot',
-      text: "Hi Azhaan! I'm your AI financial assistant. Ask me anything about your finances!",
+      text: "Hi! I'm your AI financial assistant. Ask me anything about your finances!",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const { data: { user: sessionUser } } = await supabase.auth.getUser();
+        if (sessionUser) {
+          const displayName = sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || 'User';
+          const photoURL = sessionUser.user_metadata?.avatar_url || sessionUser.user_metadata?.picture;
+          setUser({
+            name: displayName,
+            email: sessionUser.email,
+            avatar: photoURL
+          });
+          // Update the first bot message with the user's name
+          const firstName = displayName.split(' ')[0];
+          setMessages([
+            {
+              id: 1,
+              sender: 'bot',
+              text: `Hi ${firstName}! I'm your AI financial assistant. Ask me anything about your finances!`,
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+    fetchUserData();
+  }, []);
 
   const quickSuggestions = [
     "How much did I spend on food last month?",
@@ -22,7 +54,7 @@ const ChatPage = () => {
     "Show my biggest expenses"
   ];
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
 
@@ -35,39 +67,32 @@ const ChatPage = () => {
 
     setMessages([...messages, userMessage]);
     setInputMessage('');
+    setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const response = await apiFetch('/ai/chat/', {
+        method: 'POST',
+        body: JSON.stringify({ message: userMessage.text })
+      });
+
       const botResponse = {
         id: messages.length + 2,
         sender: 'bot',
-        text: getBotResponse(inputMessage),
+        text: response.reply,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, botResponse]);
-    }, 1000);
-  };
-
-  const getBotResponse = (userInput) => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes('food') || input.includes('dining')) {
-      return "This month, you've spent $197.50 on food (5 days in). That's broken down as:\n• Dining Out: $125 (63%)\n• Groceries: $72.50 (37%)\n\nYou're on track to exceed your food budget by $820. Consider cooking at home more to save money!";
+    } catch (error) {
+      const errorResponse = {
+        id: messages.length + 2,
+        sender: 'bot',
+        text: "I'm sorry, I'm having trouble connecting to my brain right now. " + error.message,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
+      setIsTyping(false);
     }
-    
-    if (input.includes('budget')) {
-      return "Great question! Your January budget status:\n• Total Budget: $2,500\n• Spent: $497.50 (20%)\n• Remaining: $2,002.50\n\nYou're doing well overall, but watch your transportation spending - it's at 64% of budget already.";
-    }
-    
-    if (input.includes('laptop')) {
-      return "Based on your current finances:\n• You have $3,460 available cash\n• After keeping $2,000 for emergencies, you have $1,460\n\nYou can afford a $1,200 laptop now, but I'd recommend saving for 4 months ($300/mo) to keep your emergency fund intact. You could afford it by May 2026!";
-    }
-    
-    if (input.includes('expense')) {
-      return "Your biggest expenses this month:\n1. Housing: $0 (due Jan 15) - $800\n2. Food & Dining: $197.50\n3. Transportation: $127\n4. Groceries: $120\n5. Entertainment: $65\n\nTransportation is your fastest-growing category!";
-    }
-    
-    return "I can help you with:\n• Tracking spending by category\n• Budget analysis\n• Goal planning\n• Expense predictions\n• Money-saving tips\n\nWhat would you like to know?";
   };
 
   const handleSuggestionClick = (suggestion) => {
@@ -89,7 +114,7 @@ const ChatPage = () => {
       ></div>
 
       <div className="relative z-10 min-h-screen flex flex-col">
-        <Header user={DUMMY_USER} />
+        <Header user={user} />
         
         <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-6">
@@ -129,6 +154,22 @@ const ChatPage = () => {
                   </div>
                 </div>
               ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="flex items-start space-x-3 max-w-[80%]">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 border-2 bg-gradient-to-br from-emerald-500/30 to-teal-600/30 border-emerald-500/50">
+                      <Bot size={20} className="text-emerald-300" />
+                    </div>
+                    <div>
+                      <div className="rounded-2xl p-3 sm:p-4 backdrop-blur-sm bg-white/10 text-white border border-white/10 flex space-x-2">
+                        <span className="animate-bounce">●</span>
+                        <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>●</span>
+                        <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>●</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Quick Suggestions */}
@@ -162,10 +203,10 @@ const ChatPage = () => {
               />
               <button
                 type="submit"
-                disabled={!inputMessage.trim()}
+                disabled={!inputMessage.trim() || isTyping}
                 className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:shadow-lg hover:shadow-emerald-500/50 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-2 border border-emerald-400/20 hover:scale-105 disabled:hover:scale-100"
               >
-                <Send size={20} />
+                {isTyping ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
                 <span className="hidden sm:inline font-medium">Send</span>
               </button>
             </div>
