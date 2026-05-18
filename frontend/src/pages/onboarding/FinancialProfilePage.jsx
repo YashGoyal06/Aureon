@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, DollarSign, Target, TrendingUp } from 'lucide-react';
+import { apiFetch } from '../../lib/api';
 
 const FinancialProfilePage = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const FinancialProfilePage = () => {
     monthlyExpenses: '',
     debts: '',
     riskTolerance: 'moderate',
-    currency: 'USD',
+    currency: 'INR',
     budgetPeriod: 'monthly'
   });
 
@@ -42,10 +43,24 @@ const FinancialProfilePage = () => {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < 4) {
       setStep(step + 1);
     } else {
+      try {
+        const cash = parseFloat(profileData.savings) || 0;
+        const debt = parseFloat(profileData.debts) || 0;
+        await apiFetch('/auth/profile/', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            cash_available: cash,
+            credit_used: debt,
+            net_worth: cash - debt
+          })
+        });
+      } catch (e) {
+        console.error("Failed to save profile", e);
+      }
       navigate('/onboarding/import');
     }
   };
@@ -138,7 +153,7 @@ const FinancialProfilePage = () => {
                       className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                     />
                     <div className="text-center mt-4 text-4xl font-bold text-emerald-400">
-                      ${profileData.monthlyIncome.toLocaleString()}
+                      ₹{profileData.monthlyIncome.toLocaleString()}
                     </div>
                   </div>
                 </div>
@@ -208,7 +223,7 @@ const FinancialProfilePage = () => {
                     Total Savings
                   </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">₹</span>
                     <input
                       type="number"
                       value={profileData.savings}
@@ -224,7 +239,7 @@ const FinancialProfilePage = () => {
                     Monthly Expenses (estimate)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">₹</span>
                     <input
                       type="number"
                       value={profileData.monthlyExpenses}
@@ -240,7 +255,7 @@ const FinancialProfilePage = () => {
                     Debts (if any)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">₹</span>
                     <input
                       type="number"
                       value={profileData.debts}
