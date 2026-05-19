@@ -1,17 +1,8 @@
 #!/bin/bash
-# Exit on error except for migrations
+# Exit on error
 set -e
 
-echo "Starting backend setup..."
+echo "Starting Aureon Backend..."
 
-# Run database migrations
-if [ -n "$DATABASE_URL" ]; then
-    echo "DATABASE_URL is set, running migrations..."
-    python manage.py migrate --noinput || echo "Migration command failed, starting server anyway..."
-else
-    echo "DATABASE_URL is not set, skipping migrations..."
-fi
-
-# Start Gunicorn
-echo "Starting Gunicorn..."
-exec gunicorn --bind 0.0.0.0:7860 --workers 4 --timeout 120 aureon_backend.wsgi:application
+# Start Gunicorn with Render's PORT env variable (fallback to 8000 for local dev)
+exec gunicorn --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120 aureon_backend.wsgi:application

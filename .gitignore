@@ -42,3 +42,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+
+# Django static files (collectstatic output)
+staticfiles/
+backend/staticfiles/
