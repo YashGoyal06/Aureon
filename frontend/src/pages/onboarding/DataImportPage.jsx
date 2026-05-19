@@ -1,7 +1,8 @@
 // src/pages/onboarding/DataImportPage.jsx
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, FileText, Table, Calendar, CheckCircle, Loader } from 'lucide-react';
+import { Upload, FileText, Table, Calendar, CheckCircle, Loader, Camera as CameraIcon, Check, Scan } from 'lucide-react';
+import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { apiFetch } from '../../lib/api';
 
 const DataImportPage = ({ setIsOnboarded }) => {
@@ -11,6 +12,15 @@ const DataImportPage = ({ setIsOnboarded }) => {
   const [uploadComplete, setUploadComplete] = useState(false);
   const fileInputRef = useRef(null);
 
+  // Native Scanning state
+  const [scannedTransactions, setScannedTransactions] = useState([]);
+  const [scanning, setScanning] = useState(false);
+  const [scanError, setScanError] = useState('');
+  const [confirming, setConfirming] = useState(false);
+
+  // Platform detection
+  const isMobileApp = window.Capacitor || window.location.origin.includes('capacitor') || (window.location.origin.includes('http://localhost') && !window.location.port);
+
   const methods = [
     {
       id: 'manual',
@@ -19,6 +29,14 @@ const DataImportPage = ({ setIsOnboarded }) => {
       description: 'Add transactions one by one',
       recommended: true
     },
+    ...(isMobileApp ? [
+      {
+        id: 'scan',
+        icon: Scan,
+        title: 'AI Receipt Scanner',
+        description: 'Snap a photo of any receipt to extract transactions with AI'
+      }
+    ] : []),
     {
       id: 'upload',
       icon: Upload,
@@ -40,10 +58,11 @@ const DataImportPage = ({ setIsOnboarded }) => {
   ];
 
   const handleMethodSelect = (method) => {
-    setSelectedMethod(method);
     if (method === 'fresh') {
       handleComplete();
+      return;
     }
+    setSelectedMethod(method);
   };
 
   const handleFileUpload = () => {
@@ -75,15 +94,101 @@ const DataImportPage = ({ setIsOnboarded }) => {
     }
   };
 
-  const handleComplete = async () => {
+  // Capacitor Camera Scanning Implementation
+  const handleCameraScan = async () => {
+    setScanError('');
     try {
-      await apiFetch('/auth/profile/', {
-        method: 'PATCH',
-        body: JSON.stringify({ is_onboarded: true })
+      // 1. Open native camera and capture compressed photo
+      const photo = await CapCamera.getPhoto({
+        quality: 40,
+        allowEditing: false,
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Camera,
+        width: 1000
       });
-    } catch (e) {
-      console.error("Failed to update onboarding status in backend", e);
+
+      if (!photo || !photo.base64String) {
+        throw new Error("No photo captured.");
+      }
+
+      setScanning(true);
+
+      // 2. Upload base64 image string to backend vision scanner
+      const response = await apiFetch('/importer/scan/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ image: photo.base64String })
+      });
+
+      if (response && response.transactions) {
+        // Mark all transactions as initially selected
+        const transactionsWithSelection = response.transactions.map((tx, idx) => ({
+          ...tx,
+          id: idx,
+          selected: true
+        }));
+        setScannedTransactions(transactionsWithSelection);
+      } else {
+        throw new Error("No transactions extracted from image.");
+      }
+    } catch (error) {
+      console.error("Camera scan error:", error);
+      setScanError(error.message || "Failed to scan statement. Please make sure the document is clear and readable.");
+    } finally {
+      setScanning(false);
     }
+  };
+
+  const handleConfirmScannedTransactions = async () => {
+    const selectedTxs = scannedTransactions.filter(tx => tx.selected);
+    if (selectedTxs.length === 0) {
+      alert("Please select at least one transaction to import.");
+      return;
+    }
+
+    setConfirming(true);
+    try {
+      await apiFetch('/importer/confirm/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ transactions: selectedTxs })
+      });
+
+      setConfirming(false);
+      setUploadComplete(true);
+      setTimeout(() => {
+        handleComplete();
+      }, 2000);
+    } catch (error) {
+      console.error("Confirmation error:", error);
+      alert("Failed to save transactions: " + error.message);
+      setConfirming(false);
+    }
+  };
+
+  const toggleSelectTx = (id) => {
+    setScannedTransactions(prev =>
+      prev.map(tx => tx.id === id ? { ...tx, selected: !tx.selected } : tx)
+    );
+  };
+
+  const handleEditTx = (id, field, value) => {
+    setScannedTransactions(prev =>
+      prev.map(tx => tx.id === id ? { ...tx, [field]: value } : tx)
+    );
+  };
+
+  const handleComplete = () => {
+    apiFetch('/auth/profile/', {
+      method: 'PATCH',
+      body: JSON.stringify({ is_onboarded: true })
+    }).catch((e) => {
+      console.error("Failed to update onboarding status in backend", e);
+    });
     setIsOnboarded(true);
     navigate('/dashboard');
   };
@@ -112,9 +217,9 @@ const DataImportPage = ({ setIsOnboarded }) => {
             Your financial data is now secure and ready to analyze!
           </p>
           <div className="space-y-2 text-sm text-gray-300 mb-6">
-            <p className="animate-[slideInRight_0.6s_ease-out_0.5s_both]">✓ 247 transactions extracted</p>
-            <p className="animate-[slideInRight_0.6s_ease-out_0.6s_both]">✓ 89% auto-categorized</p>
-            <p className="animate-[slideInRight_0.6s_ease-out_0.7s_both]">✓ 8 recurring bills detected</p>
+            <p className="animate-[slideInRight_0.6s_ease-out_0.5s_both]">✓ Data verified & categorised</p>
+            <p className="animate-[slideInRight_0.6s_ease-out_0.6s_both]">✓ AI budgeting thresholds established</p>
+            <p className="animate-[slideInRight_0.6s_ease-out_0.7s_both]">✓ Wealth security protocols complete</p>
           </div>
         </div>
       </div>
@@ -294,10 +399,146 @@ const DataImportPage = ({ setIsOnboarded }) => {
           </div>
         )}
 
+        {selectedMethod === 'scan' && (
+          <div className="bg-black/40 backdrop-blur-xl rounded-2xl shadow-2xl p-8 mb-8 border border-white/10 animate-[slideUp_0.5s_ease-out]">
+            <h2 className="text-3xl font-bold text-white mb-4">Scan Receipt / Statement</h2>
+            <p className="text-gray-400 mb-6 text-lg">
+              Take a photo of your receipt or printed statement. Aureon AI will automatically extract and categorize the transactions.
+            </p>
+
+            {scanError && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center space-x-3 text-red-200 text-sm">
+                <span>⚠️ {scanError}</span>
+              </div>
+            )}
+
+            {scannedTransactions.length === 0 && !scanning ? (
+              <div className="flex flex-col items-center gap-4 justify-center mt-8">
+                <button
+                  onClick={handleCameraScan}
+                  className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:shadow-lg hover:shadow-emerald-500/50 transition-all duration-300 font-medium hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
+                >
+                  <CameraIcon size={20} />
+                  <span>Open Camera & Scan</span>
+                </button>
+              </div>
+            ) : scanning ? (
+              <div className="text-center py-12">
+                <Loader size={56} className="text-emerald-400 animate-spin mx-auto mb-6" />
+                <h3 className="text-2xl font-bold text-white mb-2">Analyzing Document</h3>
+                <p className="text-gray-400">AI is reading your statement image to extract full transactions...</p>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-white">Review Extracted Transactions</h3>
+                  <button 
+                    onClick={handleCameraScan}
+                    className="text-sm text-emerald-400 hover:text-emerald-300 font-medium"
+                  >
+                    Rescan Document
+                  </button>
+                </div>
+
+                <div className="max-h-96 overflow-y-auto space-y-3 mb-6 pr-2 scrollbar-thin scrollbar-thumb-white/10">
+                  {scannedTransactions.map(tx => (
+                    <div 
+                      key={tx.id} 
+                      className={`p-3 sm:p-4 rounded-xl border transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                        tx.selected 
+                          ? 'bg-emerald-500/5 border-emerald-500/30' 
+                          : 'bg-white/5 border-white/10 opacity-60'
+                      }`}
+                    >
+                      <div className="flex items-start sm:items-center space-x-3">
+                        <input 
+                          type="checkbox"
+                          checked={tx.selected}
+                          onChange={() => toggleSelectTx(tx.id)}
+                          className="w-5 h-5 rounded border-white/20 text-emerald-500 focus:ring-emerald-500 bg-transparent cursor-pointer mt-1 sm:mt-0"
+                        />
+                        <div className="flex-1">
+                          <input 
+                            type="text" 
+                            value={tx.merchant} 
+                            onChange={(e) => handleEditTx(tx.id, 'merchant', e.target.value)}
+                            className="bg-transparent border-b border-transparent focus:border-white/20 text-white font-semibold text-sm outline-none w-full max-w-[200px] focus:bg-white/5 px-1 rounded"
+                            placeholder="Merchant Name"
+                          />
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <input 
+                              type="date" 
+                              value={tx.date} 
+                              onChange={(e) => handleEditTx(tx.id, 'date', e.target.value)}
+                              className="bg-transparent text-gray-400 text-xs outline-none focus:border-b focus:border-white/20 px-1"
+                            />
+                            <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-gray-300 uppercase truncate max-w-[100px]">
+                              {tx.category}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end pl-8 sm:pl-0 w-full sm:w-auto space-x-2">
+                        <div className="flex items-center">
+                          <span className="text-gray-400 text-sm">₹</span>
+                          <input 
+                            type="number" 
+                            value={tx.amount} 
+                            onChange={(e) => handleEditTx(tx.id, 'amount', e.target.value)}
+                            className={`bg-transparent border-b border-transparent focus:border-white/20 font-bold text-right outline-none w-20 focus:bg-white/5 px-1 rounded ${
+                              tx.type === 'expense' ? 'text-red-400' : 'text-emerald-400'
+                            }`}
+                          />
+                        </div>
+                        <select
+                          value={tx.type}
+                          onChange={(e) => handleEditTx(tx.id, 'type', e.target.value)}
+                          className="bg-black text-xs text-gray-400 border border-white/10 rounded px-1 py-1 outline-none"
+                        >
+                          <option value="expense">DR</option>
+                          <option value="income">CR</option>
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleConfirmScannedTransactions}
+                  disabled={confirming}
+                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:shadow-lg hover:shadow-emerald-500/50 transition-all duration-300 font-bold hover:scale-[1.02] active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-50"
+                >
+                  {confirming ? (
+                    <>
+                      <Loader className="animate-spin" size={20} />
+                      <span>Saving to Ledger...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check size={20} />
+                      <span>Confirm & Import ({scannedTransactions.filter(t => t.selected).length}) Transactions</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+            
+            {isMobileApp && (
+              <div className="mt-6 p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl backdrop-blur-sm">
+                <p className="text-sm text-emerald-300 font-medium mb-2">🔒 Secure Mobile OCR Scanner:</p>
+                <p className="text-sm text-emerald-200">
+                  Aureon integrates directly with state-of-the-art vision-language intelligence to extract structured transactions from statements/receipts. All captured camera data is TLS-encrypted and immediately deleted post-analysis.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {!selectedMethod && (
           <div className="text-center animate-[fadeIn_1s_ease-out]">
             <button
-              onClick={() => setSelectedMethod('fresh')}
+              onClick={handleComplete}
               className="text-white hover:text-emerald-400 font-medium transition-all duration-300"
             >
               Skip for now - I'll add data later

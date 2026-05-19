@@ -19,6 +19,7 @@ import { useHeaderUser } from '../hooks/useHeaderUser';
 const DashboardPage = () => {
   const [showAddTransaction, setShowAddTransaction] = useState(false);
   const [showGuide, setShowGuide] = useState(() => !localStorage.getItem('aureon_guide_dismissed'));
+  const [refreshKey, setRefreshKey] = useState(0);
   const user = useHeaderUser();
   const firstName = user?.name?.split(' ')[0] || 'there';
 
@@ -75,30 +76,32 @@ const DashboardPage = () => {
         </Reveal>
       )}
 
-      <FinancialSnapshot />
+      <div key={refreshKey}>
+        <FinancialSnapshot />
 
-      <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <AIInsights />
-        <RecentTransactions />
-      </div>
-
-      <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <UpcomingBills />
-        <ActiveGoals />
-      </div>
-
-      <Reveal>
-        <div className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-400">
-          <WalletCards size={16} />
-          Monthly budget movement
+        <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+          <AIInsights />
+          <RecentTransactions />
         </div>
-      </Reveal>
-      <SpendingChart />
+
+        <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <UpcomingBills />
+          <ActiveGoals />
+        </div>
+
+        <Reveal>
+          <div className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-400">
+            <WalletCards size={16} />
+            Monthly budget movement
+          </div>
+        </Reveal>
+        <SpendingChart />
+      </div>
 
       {showAddTransaction && (
         <AddTransactionModal onClose={() => {
           setShowAddTransaction(false);
-          window.location.reload();
+          setRefreshKey(prev => prev + 1);
         }} />
       )}
     </AppShell>

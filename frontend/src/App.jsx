@@ -1,7 +1,9 @@
 // src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { isSupabaseConfigured, supabase } from './lib/supabase'; // Import your supabase client
+import { isSupabaseConfigured, supabase } from './lib/supabase';
+import { App as CapApp } from '@capacitor/app';
+import { ToastProvider } from './components/mobile/MobileToast';
 
 import LandingPage from './pages/onboarding/LandingPage';
 import SignUpPage from './pages/onboarding/SignupPage'; // Check casing (Signup vs SignUp)
@@ -31,16 +33,8 @@ const LoadingScreen = () => {
       <div className="flex flex-col items-center z-10 text-center select-none">
         
         {/* Sleek Minimalist Geometric Logo Element */}
-        <div className="relative w-12 h-12 mb-8 flex items-center justify-center">
-          {/* Subtle concentric frame */}
-          <div className="absolute inset-0 rounded-full border border-white/5" />
-          {/* Active gold/platinum geometric cross vector */}
-          <div className="w-4 h-4 relative">
-            {/* Horizontal line segment */}
-            <div className="absolute top-1/2 left-0 right-0 h-[1.5px] -translate-y-1/2 bg-gradient-to-r from-slate-400 to-[#C5A880] rounded-full animate-vector-h" />
-            {/* Vertical line segment */}
-            <div className="absolute left-1/2 top-0 bottom-0 w-[1.5px] -translate-x-1/2 bg-gradient-to-b from-slate-400 to-[#C5A880] rounded-full animate-vector-v" />
-          </div>
+        <div className="relative w-16 h-16 mb-8 flex items-center justify-center">
+          <img src="/Aureon_logo.png" alt="Aureon Logo" className="w-full h-full object-contain drop-shadow-2xl" />
         </div>
 
         {/* Shimmering Metallic Brand Text */}
@@ -79,14 +73,6 @@ const LoadingScreen = () => {
           0%, 100% { opacity: 0.4; }
           50% { opacity: 0.85; }
         }
-        @keyframes vector-h {
-          0%, 100% { transform: scaleX(0.7) translateY(-50%); }
-          50% { transform: scaleX(1.3) translateY(-50%); }
-        }
-        @keyframes vector-v {
-          0%, 100% { transform: scaleY(0.7) translateX(-50%); }
-          50% { transform: scaleY(1.3) translateX(-50%); }
-        }
         
         .animate-progress-slide {
           animation: progress-slide 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
@@ -97,26 +83,22 @@ const LoadingScreen = () => {
         .animate-pulse-soft {
           animation: pulse-soft 2.5s ease-in-out infinite;
         }
-        .animate-vector-h {
-          animation: vector-h 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        }
-        .animate-vector-v {
-          animation: vector-v 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        }
       `}</style>
     </div>
   );
 };
 
+const isMobile = !!window.Capacitor;
+
 const ProtectedRoute = ({ children, loading, isAuthenticated, isOnboarded }) => {
-  if (loading) return <LoadingScreen />;
+  if (loading) return isMobile ? null : <LoadingScreen />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!isOnboarded) return <Navigate to="/onboarding/import" replace />;
   return children;
 };
 
 const PublicRoute = ({ children, loading, isAuthenticated }) => {
-  if (loading) return <LoadingScreen />;
+  if (loading) return isMobile ? null : <LoadingScreen />;
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   return children;
 };
@@ -127,8 +109,66 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isOnboarded, setIsOnboarded] = useState(false); 
   const [loading, setLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(!!window.Capacitor);
+
+  // Add .is-capacitor class to <html> for mobile-only CSS
+  useEffect(() => {
+    if (window.Capacitor) {
+      document.documentElement.classList.add('is-capacitor');
+      // Dismiss splash after 2.2 seconds
+      const timer = setTimeout(() => setShowSplash(false), 2200);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   useEffect(() => {
+    // 0. Listen for deep-link URL events (OAuth redirects back into app)
+    let handler;
+    if (window.Capacitor) {
+      handler = CapApp.addListener('appUrlOpen', async (event) => {
+        try {
+          const url = new URL(event.url);
+          // Catch aureon://login scheme
+          if (url.protocol === 'aureon:' && url.host === 'login') {
+            // Hash contains Supabase tokens: access_token, refresh_token, etc.
+            const hash = url.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+
+            if (accessToken) {
+              setLoading(true);
+              const { data, error } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken || '',
+              });
+
+              if (data?.session) {
+                setIsAuthenticated(true);
+                localStorage.setItem('supabase_token', data.session.access_token);
+                try {
+                  const res = await fetch(`${API_BASE_URL}/auth/me/`, {
+                    headers: {
+                      'Authorization': `Bearer ${data.session.access_token}`
+                    }
+                  });
+                  if (res.ok) {
+                    const dataRes = await res.json();
+                    setIsOnboarded(dataRes.profile?.is_onboarded || false);
+                  }
+                } catch (e) {
+                  console.error("Failed to check onboarding status", e);
+                }
+              }
+              setLoading(false);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to parse app deep link URL:", e);
+        }
+      });
+    }
+
     // 1. Check for existing session on app load
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
@@ -177,7 +217,12 @@ function App() {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (handler) {
+        handler.then(h => h.remove()).catch(() => {});
+      }
+    };
   }, []);
 
   if (!isSupabaseConfigured) {
@@ -194,7 +239,7 @@ function App() {
     );
   }
 
-  if (loading) {
+  if (loading && !isMobile) {
     return <LoadingScreen />;
   }
 
@@ -202,83 +247,94 @@ function App() {
   const publicProps = { loading, isAuthenticated };
 
   return (
-    <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<PublicRoute {...publicProps}><LandingPage /></PublicRoute>} />
-        <Route path="/login" element={<PublicRoute {...publicProps}><LoginPage setIsAuthenticated={setIsAuthenticated} /></PublicRoute>} />
-        
-        <Route 
-          path="/two-factor" 
-          element={
-            <TwoFactorAuth 
-              setIsAuthenticated={setIsAuthenticated} 
-              setIsOnboarded={setIsOnboarded} 
-            />
-          } 
-        />
-        
-        {/* Onboarding Routes */}
-        <Route path="/onboarding" element={<LandingPage />} />
-        <Route path="/onboarding/signup" element={<SignUpPage />} />
-        <Route path="/onboarding/security" element={<SecuritySetupPage />} />
-        <Route path="/onboarding/profile" element={<FinancialProfilePage />} />
-        <Route path="/onboarding/import" element={<DataImportPage setIsOnboarded={setIsOnboarded} />} />
-        
-        {/* Protected Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute {...protectedProps}>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/budget"
-          element={
-            <ProtectedRoute {...protectedProps}>
-              <BudgetPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/goals"
-          element={
-            <ProtectedRoute {...protectedProps}>
-              <GoalsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/bills"
-          element={
-            <ProtectedRoute {...protectedProps}>
-              <BillsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/chat"
-          element={
-            <ProtectedRoute {...protectedProps}>
-              <ChatPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/profile" element={<ProtectedRoute {...protectedProps}><ProfilePage /></ProtectedRoute>} />
-        <Route
-          path="/transactions"
-          element={
-            <ProtectedRoute {...protectedProps}>
-              <TransactionsPage />
-            </ProtectedRoute>
-          }
-        />
-        {/* Redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <ToastProvider>
+      {/* Mobile Splash Screen */}
+      {showSplash && (
+        <div className="mobile-splash">
+          <img src="/Aureon_logo.png" alt="Aureon" className="mobile-splash-logo" />
+          <span className="mobile-splash-text">Aureon</span>
+          <span className="mobile-splash-sub">Wealth Intelligence</span>
+        </div>
+      )}
+
+      <Router>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<PublicRoute {...publicProps}><LandingPage /></PublicRoute>} />
+          <Route path="/login" element={<PublicRoute {...publicProps}><LoginPage setIsAuthenticated={setIsAuthenticated} /></PublicRoute>} />
+          
+          <Route 
+            path="/two-factor" 
+            element={
+              <TwoFactorAuth 
+                setIsAuthenticated={setIsAuthenticated} 
+                setIsOnboarded={setIsOnboarded} 
+              />
+            } 
+          />
+          
+          {/* Onboarding Routes */}
+          <Route path="/onboarding" element={<LandingPage />} />
+          <Route path="/onboarding/signup" element={<SignUpPage />} />
+          <Route path="/onboarding/security" element={<SecuritySetupPage />} />
+          <Route path="/onboarding/profile" element={<FinancialProfilePage />} />
+          <Route path="/onboarding/import" element={<DataImportPage setIsOnboarded={setIsOnboarded} />} />
+          
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute {...protectedProps}>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/budget"
+            element={
+              <ProtectedRoute {...protectedProps}>
+                <BudgetPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/goals"
+            element={
+              <ProtectedRoute {...protectedProps}>
+                <GoalsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bills"
+            element={
+              <ProtectedRoute {...protectedProps}>
+                <BillsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute {...protectedProps}>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/profile" element={<ProtectedRoute {...protectedProps}><ProfilePage /></ProtectedRoute>} />
+          <Route
+            path="/transactions"
+            element={
+              <ProtectedRoute {...protectedProps}>
+                <TransactionsPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </ToastProvider>
   );
 }
 

@@ -1,0 +1,325 @@
+/* ============================================
+   MOBILE NATIVE STYLES (Capacitor Only)
+   These styles only activate inside the mobile app
+   and do NOT affect the website at all.
+   ============================================ */
+
+/* ── Detection: .is-capacitor is added to <html> by App.jsx ── */
+
+/* ── 1. BOTTOM TAB BAR ── */
+.mobile-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9990;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 72px;
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+  background: rgba(5, 6, 8, 0.92);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mobile-tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: 1;
+  padding: 8px 0;
+  color: rgba(148, 163, 184, 0.6);
+  transition: all 0.2s ease;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.mobile-tab-item.mobile-tab-active {
+  color: #34d399;
+}
+
+.mobile-tab-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.mobile-tab-dot {
+  position: absolute;
+  top: 4px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #34d399;
+  animation: tab-dot-in 0.3s ease;
+}
+
+.mobile-tab-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  top: -14px;
+}
+
+.mobile-tab-center-ring {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #34d399, #059669);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #050608;
+  box-shadow: 0 4px 20px rgba(52, 211, 153, 0.35), 0 0 0 4px rgba(5, 6, 8, 0.9);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mobile-tab-center:active .mobile-tab-center-ring {
+  transform: scale(0.9);
+  box-shadow: 0 2px 10px rgba(52, 211, 153, 0.2), 0 0 0 4px rgba(5, 6, 8, 0.9);
+}
+
+@keyframes tab-dot-in {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ── 4. PAGE TRANSITIONS ── */
+.is-capacitor .mobile-page-enter {
+  animation: page-slide-in 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes page-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── 5. STATUS BAR SAFE AREA ── */
+.is-capacitor .app-auth-shell {
+  /* Let the header handle its own safe area padding */
+  padding-top: 0px;
+}
+
+/* ── 6. PULL TO REFRESH indicator ── */
+.pull-refresh-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  color: #34d399;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  gap: 8px;
+  animation: ptr-fade 0.3s ease;
+}
+
+@keyframes ptr-fade {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── 9. SKELETON LOADING ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-text { height: 14px; margin-bottom: 8px; }
+.skeleton-text-sm { height: 10px; width: 60%; margin-bottom: 6px; }
+.skeleton-circle { border-radius: 50%; }
+.skeleton-card {
+  height: 80px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+/* ── 10. TOAST ANIMATIONS ── */
+.animate-toast-slide {
+  animation: toast-slide 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+}
+
+@keyframes toast-slide {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── 11. HIDE SCROLLBARS (Mobile Only) ── */
+.is-capacitor *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.is-capacitor * {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* ── 12. DISABLE OVERSCROLL BOUNCE ── */
+.is-capacitor {
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.is-capacitor body {
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.is-capacitor #root {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── 13. TOUCH RIPPLE EFFECT ── */
+.is-capacitor button,
+.is-capacitor a,
+.is-capacitor [role="button"] {
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.is-capacitor button::after,
+.is-capacitor [role="button"]::after {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.15) 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform 0.4s, opacity 0.8s;
+}
+
+.is-capacitor button:active::after,
+.is-capacitor [role="button"]:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}
+
+/* ── MOBILE LAYOUT ADJUSTMENTS ── */
+/* Extra bottom padding so content doesn't hide behind tab bar */
+.is-capacitor main {
+  padding-bottom: 90px !important;
+}
+
+/* On mobile, reduce top padding since we use a compact header */
+.is-capacitor .mobile-compact-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  /* Add base padding plus safe-area */
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 12px;
+  background: rgba(5, 6, 8, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* ── 2. SPLASH SCREEN (handled by Capacitor plugin, CSS fallback) ── */
+.mobile-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #050608;
+  animation: splash-fade-out 0.5s ease 2s forwards;
+}
+
+.mobile-splash-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  animation: splash-logo-in 0.8s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+}
+
+.mobile-splash-text {
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.4em;
+  color: rgba(203, 213, 225, 0.7);
+  text-transform: uppercase;
+  animation: splash-text-in 0.6s ease 0.3s both;
+}
+
+.mobile-splash-sub {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.35em;
+  color: rgba(100, 116, 139, 0.6);
+  text-transform: uppercase;
+  margin-top: 6px;
+  animation: splash-text-in 0.6s ease 0.5s both;
+}
+
+@keyframes splash-logo-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes splash-text-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes splash-fade-out {
+  to { opacity: 0; pointer-events: none; visibility: hidden; }
+}
