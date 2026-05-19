@@ -87,17 +87,23 @@ class StatementUploadView(APIView):
                 if not hf_api_key:
                     return Response({"error": "Hugging Face API Key is not configured on the server."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 
-                # Limit text to avoid token limits (approx 5000 chars)
-                prompt_text = full_text[:5000]
+                # Get the first 6000 and the last 4000 characters of the text to ensure we capture the closing balance section printed at the end
+                if len(full_text) <= 10000:
+                    prompt_text = full_text
+                else:
+                    prompt_text = full_text[:6000] + "\n... [TRUNCATED] ...\n" + full_text[-4000:]
                 
-                prompt = f"""You are a financial data extraction assistant. Extract all transactions from the following bank statement text.
-Return the output STRICTLY as a JSON array of objects. Do not include markdown code block formatting (like ```json), other tags, or explanations. Each object must have these exact keys:
-- "date": string in YYYY-MM-DD format
-- "merchant": string (clean name of the merchant or person. Remove raw UPI IDs, transaction codes like UPI/DR/..., and account numbers to make it look clean).
-- "amount": number (positive number always)
-- "type": "expense" or "income" (CRITICAL: Use "expense" if the transaction is a debit, withdrawal, marked with "DR", "UPI/DR", "Paid out", "Sent to", or in the Debit/Withdrawal column. Use "income" if the transaction is a credit, deposit, marked with "CR", "UPI/CR", "Received in", "Received from", or in the Credit/Deposit column. Pay extreme attention to DR/CR markers in UPI transaction descriptions as they determine the true direction of the funds!)
-- "category_key": one of ["income", "dining", "coffee", "groceries", "transportation", "entertainment", "shopping", "healthcare", "education", "housing", "miscellaneous"]
-- "category": the corresponding display name (e.g. "Food & Dining" for "dining", "Income" for "income", "Miscellaneous" for "miscellaneous")
+                prompt = f"""You are a financial data extraction assistant. Analyze the bank statement text to extract the final/closing balance of the account and all transactions.
+Return the output STRICTLY as a JSON object with the following keys. Do not include markdown code block formatting (like ```json), other tags, or explanations.
+Keys:
+- "closing_balance": number (the final/closing/ending balance of the account as shown in the statement. Look for phrases like "Closing Balance", "Ending Balance", "Balance Carried Forward", "Available Balance", or the balance listed in the last transaction row. Do not include currency symbols or commas, just a clean float/decimal.)
+- "transactions": a JSON array of objects, where each object has these exact keys:
+  - "date": string in YYYY-MM-DD format
+  - "merchant": string (clean name of the merchant or person. Remove raw UPI IDs, transaction codes like UPI/DR/..., and account numbers to make it look clean).
+  - "amount": number (positive number always)
+  - "type": "expense" or "income" (CRITICAL: Use "expense" if the transaction is a debit, withdrawal, marked with "DR", "UPI/DR", "Paid out", "Sent to", or in the Debit/Withdrawal column. Use "income" if the transaction is a credit, deposit, marked with "CR", "UPI/CR", "Received in", "Received from", or in the Credit/Deposit column. Pay extreme attention to DR/CR markers in UPI transaction descriptions as they determine the true direction of the funds!)
+  - "category_key": one of ["income", "dining", "coffee", "groceries", "transportation", "entertainment", "shopping", "healthcare", "education", "housing", "miscellaneous"]
+  - "category": the corresponding display name (e.g. "Food & Dining" for "dining", "Income" for "income", "Miscellaneous" for "miscellaneous")
 
 Text:
 {prompt_text}
@@ -123,17 +129,39 @@ Text:
                         result = response.json()
                         bot_reply = result['choices'][0]['message']['content'].strip() if ('choices' in result and len(result['choices']) > 0) else ""
                         
-                        # Robustly extract JSON array using regex
+                        # Robustly extract JSON using regex
                         import re
-                        json_match = re.search(r'\[.*\]', bot_reply, re.DOTALL)
-                        if json_match:
-                            bot_reply = json_match.group(0)
+                        parsed_data = None
                         
-                        try:
-                            transactions_data = json.loads(bot_reply)
-                        except Exception as e:
-                            print(f"Failed to parse JSON from AI: {e}. Reply was: {bot_reply}")
-                            return Response({"error": "AI generated invalid JSON. Please try again."}, status=status.HTTP_502_BAD_GATEWAY)
+                        # Try to extract the JSON object first
+                        object_match = re.search(r'\{.*\}', bot_reply, re.DOTALL)
+                        if object_match:
+                            try:
+                                parsed_data = json.loads(object_match.group(0))
+                            except Exception as parse_err:
+                                print(f"Failed to parse JSON object from match: {parse_err}")
+                        
+                        # Fallback: if no object or object parsing failed, check for array
+                        if not parsed_data:
+                            array_match = re.search(r'\[.*\]', bot_reply, re.DOTALL)
+                            if array_match:
+                                try:
+                                    transactions_data = json.loads(array_match.group(0))
+                                    parsed_data = {"transactions": transactions_data, "closing_balance": None}
+                                except Exception as parse_err:
+                                    print(f"Failed to parse JSON array from match: {parse_err}")
+                        
+                        if not parsed_data:
+                            print(f"Failed to parse JSON from AI reply. Reply was: {bot_reply}")
+                            return Response({"error": "AI generated invalid JSON structure. Please try again."}, status=status.HTTP_502_BAD_GATEWAY)
+                        
+                        # Extract components
+                        if isinstance(parsed_data, dict):
+                            transactions_data = parsed_data.get('transactions', [])
+                            closing_balance = parsed_data.get('closing_balance')
+                        else:
+                            transactions_data = parsed_data
+                            closing_balance = None
                         
                         for tx in transactions_data:
                             try:
@@ -168,6 +196,19 @@ Text:
                             except Exception as e:
                                 print(f"Error creating transaction from AI data: {e}")
                                 continue
+                        
+                        # If a closing balance was successfully parsed, set user's profile balance to it
+                        if closing_balance is not None:
+                            try:
+                                closing_dec = Decimal(str(closing_balance))
+                                from users.models import FinancialProfile
+                                profile, _ = FinancialProfile.objects.get_or_create(user=request.user)
+                                profile.cash_available = closing_dec
+                                profile.net_worth = closing_dec + profile.invested_amount - profile.credit_used
+                                profile.save()
+                                print(f"Successfully updated user profile cash_available to: {closing_dec}")
+                            except Exception as profile_err:
+                                print(f"Error updating user profile balance: {profile_err}")
                                 
                     else:
                         print(f"AI model error: {response.text}")
