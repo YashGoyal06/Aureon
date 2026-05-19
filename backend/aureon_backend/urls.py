@@ -1,6 +1,10 @@
 # backend/aureon_backend/urls.py
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
+
+def health_check(request):
+    return JsonResponse({"status": "ok"})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -8,4 +12,5 @@ urlpatterns = [
     path('api/finance/', include('finance.urls')), # Finance API endpoints
     path('api/ai/', include('ai_assistant.urls')), # AI Chatbot endpoints
     path('api/importer/', include('importer.urls')), # Statement importer endpoints
+    path('api/health/', health_check), # UptimeRobot ping to prevent Render sleep
 ]
