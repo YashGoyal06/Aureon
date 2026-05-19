@@ -1,20 +1,20 @@
 // frontend/src/pages/ProfilePage.jsx
-import React, { useState, useEffect } from 'react';
-import Header from '../components/common/Header';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  User,
   Mail,
   CheckCircle,
-  Edit2,
-  Save,
-  X,
   Loader,
   AlertCircle,
   ShieldCheck,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import AppShell from '../components/layout/AppShell';
+import PageHeader from '../components/layout/PageHeader';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api/auth';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api') + '/auth';
 
 const fetchWithAuth = async (url, options = {}) => {
   const token = localStorage.getItem('supabase_token');
@@ -47,7 +47,6 @@ const fetchWithAuth = async (url, options = {}) => {
 
 const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState(null);
   const [sendingOTP, setSendingOTP] = useState(false);
   const [verifyingOTP, setVerifyingOTP] = useState(false);
@@ -61,7 +60,7 @@ const ProfilePage = () => {
     profilePhoto: null,
   });
 
-  const ensureValidToken = async () => {
+  const ensureValidToken = useCallback(async () => {
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error) throw error;
 
@@ -70,13 +69,9 @@ const ProfilePage = () => {
       return true;
     }
     return false;
-  };
-
-  useEffect(() => {
-    loadUserProfile();
   }, []);
 
-  const loadUserProfile = async () => {
+  const loadUserProfile = useCallback(async () => {
     try {
       setLoading(true);
       setMessage({ type: 'info', text: 'Loading profile...' });
@@ -118,7 +113,11 @@ const ProfilePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [ensureValidToken]);
+
+  useEffect(() => {
+    loadUserProfile();
+  }, [loadUserProfile]);
 
   const handleSendEmailOTP = async () => {
     setSendingOTP(true);
@@ -200,35 +199,23 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen relative">
-      <div
-        className="fixed inset-0 z-0"
-        style={{
-          backgroundImage: 'url("/dashboard-bg.jpg")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
-
-      <div className="relative z-10">
-        <Header
-          user={{
-            name: profileData.name,
-            email: profileData.email,
-            avatar: profileData.profilePhoto,
-          }}
-        />
-
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-16">
+    <AppShell
+      narrow
+      user={{
+        name: profileData.name,
+        email: profileData.email,
+        avatar: profileData.profilePhoto,
+      }}
+    >
           {/* Message */}
           {message && (
             <div
-              className={`mb-6 p-4 rounded-xl flex items-center space-x-3 ${
+              className={`mb-6 p-4 rounded-xl flex items-center space-x-3 border ${
                 message.type === 'error'
-                  ? 'bg-red-500/20 border border-red-500/30'
+                  ? 'bg-red-500/12 border-red-500/25'
                   : message.type === 'success'
-                  ? 'bg-emerald-500/20 border border-emerald-500/30'
-                  : 'bg-blue-500/20 border border-blue-500/30'
+                  ? 'bg-emerald-500/12 border-emerald-500/25'
+                  : 'bg-blue-500/12 border-blue-500/25'
               }`}
             >
               {message.type === 'error' && <AlertCircle size={20} className="text-red-400" />}
@@ -238,44 +225,42 @@ const ProfilePage = () => {
             </div>
           )}
 
-          {/* Header */}
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Profile Settings</h1>
-              <p className="text-gray-300">Manage your account information</p>
-            </div>
-          </div>
+          <PageHeader
+            eyebrow="Account"
+            title="Profile settings"
+            subtitle="Manage identity, email verification, and session security status."
+          />
 
           {/* Account Overview */}
-          <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-8 mb-6 border border-white/10">
-            <div className="flex items-center space-x-6">
+          <Card className="p-8 mb-6">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
               <img
                 src={profileData.profilePhoto || '/default-avatar.png'}
                 alt="avatar"
-                className="w-24 h-24 rounded-2xl object-cover border border-white/10"
+                className="w-24 h-24 rounded-xl object-cover border border-white/10"
               />
 
               <div className="flex-1">
-                <h2 className="text-3xl font-bold text-white">{profileData.name}</h2>
+                <h2 className="text-3xl font-semibold text-white">{profileData.name}</h2>
                 <p className="text-gray-400">{profileData.email}</p>
 
                 {profileData.emailVerified ? (
-                  <div className="mt-2 inline-flex items-center px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                  <Badge tone="success" className="mt-3">
                     <CheckCircle size={16} className="text-emerald-400 mr-2" />
-                    <span className="text-emerald-300 text-sm">Verified Account</span>
-                  </div>
+                    Verified Account
+                  </Badge>
                 ) : (
-                  <div className="mt-2 inline-flex items-center px-3 py-1 bg-orange-500/10 border border-orange-500/30 rounded-lg">
+                  <Badge tone="warning" className="mt-3">
                     <AlertCircle size={16} className="text-orange-400 mr-2" />
-                    <span className="text-orange-300 text-sm">Not Verified</span>
-                  </div>
+                    Not Verified
+                  </Badge>
                 )}
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Email Verification */}
-          <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-8 mb-6 border border-white/10">
+          <Card className="p-8 mb-6">
             <h2 className="text-2xl font-semibold text-white mb-6 flex items-center space-x-2">
               <Mail size={24} className="text-emerald-400" />
               <span>Email Verification</span>
@@ -319,7 +304,7 @@ const ProfilePage = () => {
                       setOtp('');
                       setMessage(null);
                     }}
-                    className="flex-1 py-3 border border-white/20 text-white rounded-xl hover:bg-white/10"
+                  className="flex-1 py-3 border border-white/20 text-white rounded-xl hover:bg-white/10"
                   >
                     Cancel
                   </button>
@@ -327,7 +312,7 @@ const ProfilePage = () => {
                   <button
                     onClick={handleVerifyEmailOTP}
                     disabled={verifyingOTP || otp.length !== 6}
-                    className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl disabled:opacity-50"
+                  className="flex-1 py-3 bg-emerald-400 text-slate-950 rounded-xl disabled:opacity-50"
                   >
                     {verifyingOTP ? 'Verifying...' : 'Verify Code'}
                   </button>
@@ -342,18 +327,18 @@ const ProfilePage = () => {
                 </button>
               </div>
             ) : (
-              <button
+              <Button
                 onClick={handleSendEmailOTP}
                 disabled={sendingOTP}
-                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl disabled:opacity-50"
+                className="w-full"
               >
                 {sendingOTP ? 'Sending...' : 'Send Verification Code'}
-              </button>
+              </Button>
             )}
-          </div>
+          </Card>
 
           {/* Security & Status */}
-          <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-8 border border-white/10">
+          <Card className="p-8">
             <h2 className="text-2xl font-semibold text-white mb-6 flex items-center space-x-2">
               <ShieldCheck size={24} className="text-emerald-400" />
               <span>Security & Status</span>
@@ -366,10 +351,8 @@ const ProfilePage = () => {
               </div>
               <span className="text-emerald-400 text-sm">Active</span>
             </div>
-          </div>
-        </main>
-      </div>
-    </div>
+          </Card>
+    </AppShell>
   );
 };
 

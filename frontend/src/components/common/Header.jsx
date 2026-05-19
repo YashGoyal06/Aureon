@@ -1,29 +1,44 @@
-// src/components/common/Header.jsx
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, DollarSign, Target, Bell, MessageSquare, User, Settings, LogOut, Menu, X } from 'lucide-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import * as Tooltip from '@radix-ui/react-tooltip';
+import * as Dialog from '@radix-ui/react-dialog';
+import {
+  Bell,
+  CreditCard,
+  Home,
+  LogOut,
+  Menu,
+  MessageSquare,
+  Settings,
+  Target,
+  User,
+  WalletCards,
+  X,
+} from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { cn } from '../../lib/utils';
+import { Button } from '../ui/button';
+
+const navItems = [
+  { id: 'home', label: 'Dashboard', icon: Home, path: '/dashboard' },
+  { id: 'budget', label: 'Budget', icon: WalletCards, path: '/budget' },
+  { id: 'transactions', label: 'Transactions', icon: CreditCard, path: '/transactions' },
+  { id: 'goals', label: 'Goals', icon: Target, path: '/goals' },
+  { id: 'bills', label: 'Bills', icon: Bell, path: '/bills' },
+  { id: 'chat', label: 'Assistant', icon: MessageSquare, path: '/chat' },
+];
+
+const notifications = [
+  { id: 1, text: 'Netflix subscription renews tomorrow', time: '1h ago', tone: 'warning' },
+  { id: 2, text: 'Transportation budget is running hot', time: '3h ago', tone: 'danger' },
+  { id: 3, text: 'Monthly spending summary is ready', time: '1d ago', tone: 'info' },
+];
 
 const Header = ({ user }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [showMenu, setShowMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showMobileNav, setShowMobileNav] = useState(false);
-
-  const navItems = [
-    { id: 'home', label: 'Home', icon: Home, path: '/dashboard' },
-    { id: 'budget', label: 'Budget', icon: DollarSign, path: '/budget' },
-    { id: 'goals', label: 'Goals', icon: Target, path: '/goals' },
-    { id: 'bills', label: 'Bills', icon: Bell, path: '/bills' },
-    { id: 'chat', label: 'Chat', icon: MessageSquare, path: '/chat' }
-  ];
-
-  const notifications = [
-    { id: 1, text: 'Netflix subscription renews tomorrow', time: '1h ago', unread: true },
-    { id: 2, text: 'You exceeded your transportation budget', time: '3h ago', unread: true },
-    { id: 3, text: 'Monthly report is ready', time: '1d ago', unread: false }
-  ];
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (path) => location.pathname === path;
 
@@ -37,248 +52,164 @@ const Header = ({ user }) => {
     }
   };
 
-  const renderAvatar = (w = "w-9", h = "h-9", textSize = "text-sm") => {
+  const renderAvatar = (size = 'h-9 w-9') => {
     if (user?.avatar) {
-      return (
-        <img 
-          src={user.avatar} 
-          alt={user.name} 
-          className={`${w} ${h} rounded-full object-cover border border-white/20`}
-        />
-      );
+      return <img src={user.avatar} alt={user.name || 'User'} className={cn(size, 'rounded-lg object-cover ring-1 ring-white/15')} />;
     }
+
     return (
-      <div className={`${w} ${h} bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center shadow-lg border border-white/10`}>
-        <span className={`text-white ${textSize} font-medium`}>
-          {user?.name?.charAt(0) || 'U'}
-        </span>
+      <div className={cn(size, 'flex items-center justify-center rounded-lg bg-emerald-400 text-sm font-semibold text-slate-950')}>
+        {(user?.name || 'U').charAt(0).toUpperCase()}
       </div>
     );
   };
 
+  const renderNavButton = (item, compact = false) => {
+    const Icon = item.icon;
+    const active = isActive(item.path);
+
+    return (
+      <button
+        key={item.id}
+        onClick={() => {
+          navigate(item.path);
+          setMobileOpen(false);
+        }}
+        className={cn(
+          'relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition',
+          active ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/7 hover:text-white',
+          compact && 'w-full justify-start px-4 py-3'
+        )}
+      >
+        <Icon size={18} />
+        <span className={compact ? 'inline' : 'hidden xl:inline'}>{item.label}</span>
+        {active && <span className="absolute inset-x-3 -bottom-px h-px rounded-full bg-emerald-300" />}
+      </button>
+    );
+  };
+
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-4 sm:pt-6 pb-4">
-        <nav className="max-w-7xl mx-auto bg-black/40 backdrop-blur-xl rounded-full shadow-2xl border border-white/10 px-4 sm:px-8 py-2">
-          <div className="flex justify-between items-center">
-            
-            {/* Logo */}
-            <div 
-              className="flex items-center cursor-pointer hover:scale-105 transition-transform duration-300"
-              onClick={() => navigate('/')}
-            >
-              <img 
-                src="/Aureon_logo.png" 
-                alt="Aureon Logo" 
-                className="h-8 w-8 sm:h-10 sm:w-10 rounded-full object-cover"
-              />
+    <Tooltip.Provider delayDuration={180}>
+      <header className="fixed left-0 right-0 top-0 z-50 px-4 pt-4 sm:px-6">
+        <nav className="mx-auto flex max-w-7xl items-center justify-between rounded-xl border border-white/10 bg-slate-950/84 px-3 py-3 shadow-[0_20px_60px_rgba(2,6,23,0.38)] backdrop-blur-xl">
+          <button onClick={() => navigate('/dashboard')} className="flex items-center gap-3 rounded-lg px-2 py-1.5 text-left transition hover:bg-white/7">
+            <img src="/Aureon_logo.png" alt="Aureon" className="h-8 w-8 rounded-lg object-cover" />
+            <div className="hidden sm:block">
+              <p className="text-sm font-semibold leading-none text-white">Aureon</p>
+              <p className="mt-1 text-[11px] text-slate-500">Wealth Management</p>
             </div>
+          </button>
 
-            {/* Desktop Navigation Icons */}
-            <div className="hidden lg:flex items-center space-x-2">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.path);
-                
-                return (
-                  <div key={item.id} className="relative group">
-                    <button
-                      onClick={() => navigate(item.path)}
-                      className={`p-3 rounded-full transition-all duration-300 ${
-                        active 
-                          ? 'bg-emerald-500/20 text-emerald-400' 
-                          : 'text-white/70 hover:text-white hover:bg-white/10'
-                      }`}
-                    >
-                      <Icon size={22} className={active ? 'stroke-[2.5]' : ''} />
-                    </button>
-                    
-                    {/* Tooltip on hover */}
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-black/90 backdrop-blur-md text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap border border-white/10">
-                      {item.label}
-                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black/90 rotate-45 border-l border-t border-white/10"></div>
-                    </div>
+          <div className="hidden items-center gap-1 lg:flex">
+            {navItems.map((item) => (
+              <Tooltip.Root key={item.id}>
+                <Tooltip.Trigger asChild>{renderNavButton(item)}</Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content sideOffset={10} className="rounded-md border border-white/10 bg-slate-950 px-2.5 py-1.5 text-xs text-white shadow-xl">
+                    {item.label}
+                    <Tooltip.Arrow className="fill-slate-950" />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <Button variant="ghost" size="icon" className="relative text-slate-300">
+                  <Bell size={19} />
+                  <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-amber-300" />
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content align="end" sideOffset={12} className="w-80 overflow-hidden rounded-xl border border-white/10 bg-slate-950/96 p-2 text-slate-100 shadow-2xl backdrop-blur-xl">
+                  <div className="px-3 py-2">
+                    <p className="text-sm font-semibold text-white">Notifications</p>
+                    <p className="text-xs text-slate-500">Financial signals that need attention</p>
                   </div>
-                );
-              })}
-            </div>
+                  {notifications.map((notification) => (
+                    <DropdownMenu.Item key={notification.id} className="rounded-lg px-3 py-3 outline-none transition hover:bg-white/7">
+                      <p className="text-sm text-slate-200">{notification.text}</p>
+                      <p className="mt-1 text-xs text-slate-500">{notification.time}</p>
+                    </DropdownMenu.Item>
+                  ))}
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setShowMobileNav(!showMobileNav)}
-              className="lg:hidden p-2 rounded-full hover:bg-white/10 transition-all duration-300 text-white"
-            >
-              {showMobileNav ? <X size={24} /> : <Menu size={24} />}
-            </button>
-
-            {/* User Menu - Right */}
-            <div className="hidden lg:flex items-center space-x-3">
-              {/* Notifications */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-3 rounded-full hover:bg-white/10 transition-all duration-300 relative text-white/70 hover:text-white"
-                >
-                  <Bell size={20} />
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                </button>
-
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-black/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden animate-[slideDown_0.3s_ease-out]">
-                    <div className="p-4 border-b border-white/10">
-                      <h3 className="font-semibold text-white">Notifications</h3>
-                    </div>
-                    <div className="max-h-96 overflow-y-auto">
-                      {notifications.map(notif => (
-                        <div
-                          key={notif.id}
-                          className={`p-4 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors duration-300 ${
-                            notif.unread ? 'bg-emerald-500/5' : ''
-                          }`}
-                        >
-                          <p className="text-sm text-white">{notif.text}</p>
-                          <p className="text-xs text-gray-400 mt-1">{notif.time}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="p-3 text-center border-t border-white/10">
-                      <button className="text-sm text-emerald-400 hover:text-emerald-300 font-medium transition-colors duration-300">
-                        View All
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* User Profile */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowMenu(!showMenu)}
-                  className="flex items-center space-x-2 p-2 pr-4 rounded-full hover:bg-white/10 transition-all duration-300"
-                >
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button className="hidden items-center gap-2 rounded-lg px-2 py-1.5 transition hover:bg-white/7 lg:flex">
                   {renderAvatar()}
-                  <span className="text-sm font-medium text-white hidden xl:block">
-                    {user?.name?.split(' ')[0] || 'User'}
-                  </span>
+                  <span className="max-w-24 truncate text-sm font-medium text-white">{user?.name?.split(' ')[0] || 'User'}</span>
                 </button>
-
-                {showMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-black/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden animate-[slideDown_0.3s_ease-out]">
-                    <div className="p-4 border-b border-white/10">
-                      <p className="font-medium text-white truncate">{user?.name || 'User'}</p>
-                      <p className="text-sm text-gray-400 truncate">{user?.email || ''}</p>
-                    </div>
-                    <div className="py-2">
-                      {/* --- UPDATED PROFILE LINK --- */}
-                      <button 
-                        onClick={() => {
-                          navigate('/profile');
-                          setShowMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 flex items-center space-x-2 transition-colors duration-300"
-                      >
-                        <User size={16} />
-                        <span>Profile</span>
-                      </button>
-                      <button className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 flex items-center space-x-2 transition-colors duration-300">
-                        <Settings size={16} />
-                        <span>Settings</span>
-                      </button>
-                    </div>
-                    <div className="border-t border-white/10">
-                      <button 
-                        onClick={handleLogout}
-                        className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center space-x-2 transition-colors duration-300"
-                      >
-                        <LogOut size={16} />
-                        <span>Logout</span>
-                      </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content align="end" sideOffset={12} className="w-64 overflow-hidden rounded-xl border border-white/10 bg-slate-950/96 p-2 text-slate-100 shadow-2xl backdrop-blur-xl">
+                  <div className="flex items-center gap-3 px-3 py-3">
+                    {renderAvatar('h-11 w-11')}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-white">{user?.name || 'User'}</p>
+                      <p className="truncate text-xs text-slate-500">{user?.email || ''}</p>
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
+                  <DropdownMenu.Separator className="my-1 h-px bg-white/10" />
+                  <DropdownMenu.Item onClick={() => navigate('/profile')} className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm outline-none hover:bg-white/7">
+                    <User size={16} /> Profile
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm outline-none hover:bg-white/7">
+                    <Settings size={16} /> Settings
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator className="my-1 h-px bg-white/10" />
+                  <DropdownMenu.Item onClick={handleLogout} className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-200 outline-none hover:bg-red-500/10">
+                    <LogOut size={16} /> Logout
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+
+            <Dialog.Root open={mobileOpen} onOpenChange={setMobileOpen}>
+              <Dialog.Trigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden">
+                  <Menu size={20} />
+                </Button>
+              </Dialog.Trigger>
+              <Dialog.Portal>
+                <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm" />
+                <Dialog.Content className="fixed inset-y-0 right-0 z-50 w-[86vw] max-w-sm border-l border-white/10 bg-slate-950 p-5 text-white shadow-2xl">
+                  <div className="mb-6 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {renderAvatar('h-10 w-10')}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">{user?.name || 'User'}</p>
+                        <p className="truncate text-xs text-slate-500">{user?.email || ''}</p>
+                      </div>
+                    </div>
+                    <Dialog.Close asChild>
+                      <Button variant="ghost" size="icon">
+                        <X size={18} />
+                      </Button>
+                    </Dialog.Close>
+                  </div>
+                  <div className="space-y-1">
+                    {navItems.map((item) => renderNavButton(item, true))}
+                  </div>
+                  <div className="mt-6 border-t border-white/10 pt-4">
+                    <button onClick={() => navigate('/profile')} className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-300 hover:bg-white/7 hover:text-white">
+                      <User size={18} /> Profile
+                    </button>
+                    <button onClick={handleLogout} className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-red-200 hover:bg-red-500/10">
+                      <LogOut size={18} /> Logout
+                    </button>
+                  </div>
+                </Dialog.Content>
+              </Dialog.Portal>
+            </Dialog.Root>
           </div>
         </nav>
       </header>
-
-      {/* Mobile Navigation Dropdown */}
-      {showMobileNav && (
-        <div className="lg:hidden fixed top-20 left-0 right-0 z-40 mx-4 bg-black/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden animate-[slideDown_0.3s_ease-out]">
-          <div className="p-4">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
-              
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    navigate(item.path);
-                    setShowMobileNav(false);
-                  }}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl mb-2 transition-all duration-300 ${
-                    active
-                      ? 'bg-emerald-500/20 text-emerald-400'
-                      : 'text-white hover:bg-white/10'
-                  }`}
-                >
-                  <Icon size={20} />
-                  <span className="font-medium">{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
-          
-          {/* Mobile Profile Section */}
-          <div className="border-t border-white/10 p-4">
-            <div className="flex items-center space-x-3 mb-4">
-              {renderAvatar("w-10", "h-10", "text-sm")}
-              <div className="overflow-hidden">
-                <p className="font-medium text-white text-sm truncate">{user?.name || 'User'}</p>
-                <p className="text-xs text-gray-400 truncate">{user?.email || ''}</p>
-              </div>
-            </div>
-            
-            {/* --- UPDATED MOBILE PROFILE LINK --- */}
-            <button 
-              onClick={() => {
-                navigate('/profile');
-                setShowMobileNav(false);
-              }}
-              className="w-full flex items-center space-x-2 px-4 py-2 text-left text-sm text-white hover:bg-white/10 rounded-lg mb-2 transition-colors duration-300"
-            >
-              <User size={16} />
-              <span>Profile</span>
-            </button>
-            <button className="w-full flex items-center space-x-2 px-4 py-2 text-left text-sm text-white hover:bg-white/10 rounded-lg mb-2 transition-colors duration-300">
-              <Settings size={16} />
-              <span>Settings</span>
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="w-full flex items-center space-x-2 px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors duration-300"
-            >
-              <LogOut size={16} />
-              <span>Logout</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
-    </>
+    </Tooltip.Provider>
   );
 };
 

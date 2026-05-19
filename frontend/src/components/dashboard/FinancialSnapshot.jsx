@@ -91,10 +91,7 @@ const FinancialSnapshot = () => {
           <div className="text-4xl font-bold mb-2">
             ₹{parseFloat(p.net_worth || 0).toLocaleString()}
           </div>
-          <div className="flex items-center space-x-2 text-sm">
-            <TrendingUp size={16} />
-            <span>+₹420 this month (3.98%)</span>
-          </div>
+          {/* Monthly change line removed */}
         </div>
 
         {/* Quick Stats Grid */}

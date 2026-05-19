@@ -58,9 +58,9 @@ const AIInsights = () => {
   return (
     <div className="h-full">
       <div className="bg-black/40 backdrop-blur-xl rounded-2xl shadow-2xl p-4 sm:p-6 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 h-full flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">AI Daily Insights</h2>
-          <span className="text-sm text-gray-400">Good morning, {userName}!</span>
+        <div className="flex flex-col mb-4 gap-1">
+          <h2 className="text-lg font-semibold text-white">Daily Insights</h2>
+          <span className="text-sm text-gray-400 truncate">Good morning, {userName.split('@')[0]}!</span>
         </div>
 
         <div className="space-y-3 overflow-y-auto flex-1">
@@ -76,7 +76,7 @@ const AIInsights = () => {
             insights.slice(0, 3).map((insight) => (
               <div
                 key={insight.id}
-                className={`p-3 sm:p-4 rounded-xl border backdrop-blur-sm hover:bg-white/5 transition-all duration-300 ${getBackgroundColor(insight.type)}`}
+                className={`p-3 sm:p-4 rounded-xl border backdrop-blur-sm hover:bg-white/10 hover:-translate-y-0.5 hover:border-emerald-500/20 transition-all duration-300 ${getBackgroundColor(insight.type)}`}
               >
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0 mt-0.5">

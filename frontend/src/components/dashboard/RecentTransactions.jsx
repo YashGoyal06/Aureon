@@ -51,7 +51,7 @@ const RecentTransactions = () => {
 
   return (
     <div className="h-full">
-      <div className="bg-black/40 backdrop-blur-xl rounded-2xl shadow-2xl p-4 sm:p-6 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 h-full flex flex-col">
+      <div className="bg-black/40 backdrop-blur-xl rounded-2xl shadow-2xl p-4 sm:p-6 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 h-full flex flex-col overflow-hidden">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">Recent Transactions</h2>
           <button 
@@ -80,7 +80,7 @@ const RecentTransactions = () => {
                   {getCategoryIcon(transaction.categoryKey)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-white text-sm sm:text-base truncate">{transaction.merchant}</p>
+                  <p className="font-medium text-white text-sm sm:text-base break-words">{transaction.merchant}</p>
                   <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-400">
                     <span>{formatDate(transaction.date)}</span>
                     {transaction.time && (

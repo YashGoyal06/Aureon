@@ -1,14 +1,14 @@
 // src/components/budget/AddBudgetModal.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Check } from 'lucide-react';
 import { apiFetch } from '../../lib/api';
 
 const AddBudgetModal = ({ onClose, onRefresh, editingBudget = null }) => {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    name: 'dining',
-    budget_amount: '',
-  });
+  const [formData, setFormData] = useState(() => ({
+    name: editingBudget?.category_key || 'dining',
+    budget_amount: editingBudget ? Math.round(parseFloat(editingBudget.budget_amount)).toString() : '',
+  }));
 
   const CATEGORIES = [
     { name: 'Food & Dining', value: 'dining' },
@@ -18,15 +18,6 @@ const AddBudgetModal = ({ onClose, onRefresh, editingBudget = null }) => {
     { name: 'Entertainment', value: 'entertainment' },
     { name: 'Miscellaneous', value: 'miscellaneous' }
   ];
-
-  useEffect(() => {
-    if (editingBudget) {
-      setFormData({
-        name: editingBudget.category_key || 'dining',
-        budget_amount: Math.round(parseFloat(editingBudget.budget_amount)).toString(),
-      });
-    }
-  }, [editingBudget]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

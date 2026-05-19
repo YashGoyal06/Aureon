@@ -1,7 +1,7 @@
 // src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { supabase } from './lib/supabase'; // Import your supabase client
+import { isSupabaseConfigured, supabase } from './lib/supabase'; // Import your supabase client
 
 import LandingPage from './pages/onboarding/LandingPage';
 import SignUpPage from './pages/onboarding/SignupPage'; // Check casing (Signup vs SignUp)
@@ -18,6 +18,25 @@ import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
 import TransactionsPage from './pages/TransactionsPage';
 
+const LoadingScreen = () => (
+  <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>
+);
+
+const ProtectedRoute = ({ children, loading, isAuthenticated, isOnboarded }) => {
+  if (loading) return <LoadingScreen />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isOnboarded) return <Navigate to="/onboarding/import" replace />;
+  return children;
+};
+
+const PublicRoute = ({ children, loading, isAuthenticated }) => {
+  if (loading) return <LoadingScreen />;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  return children;
+};
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isOnboarded, setIsOnboarded] = useState(false); 
@@ -30,7 +49,7 @@ function App() {
         setIsAuthenticated(true);
         localStorage.setItem('supabase_token', session.access_token);
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/auth/me/', {
+          const res = await fetch(`${API_BASE_URL}/auth/me/`, {
             headers: {
               'Authorization': `Bearer ${session.access_token}`
             }
@@ -52,7 +71,7 @@ function App() {
         setIsAuthenticated(true);
         localStorage.setItem('supabase_token', session.access_token);
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/auth/me/', {
+          const res = await fetch(`${API_BASE_URL}/auth/me/`, {
             headers: {
               'Authorization': `Bearer ${session.access_token}`
             }
@@ -75,36 +94,33 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const ProtectedRoute = ({ children }) => {
-    if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
-    
-    if (!isAuthenticated) {
-      return <Navigate to="/login" replace />;
-    }
-    if (!isOnboarded) {
-       return <Navigate to="/onboarding/profile" replace />;
-    }
-    return children;
-  };
-
-  const PublicRoute = ({ children }) => {
-    if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
-    if (isAuthenticated) {
-      return <Navigate to="/dashboard" replace />;
-    }
-    return children;
-  };
+  if (!isSupabaseConfigured) {
+    return (
+      <div className="min-h-screen bg-slate-950 px-4 py-10 text-white">
+        <div className="mx-auto max-w-xl rounded-xl border border-amber-300/20 bg-amber-300/10 p-6">
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-200">Missing configuration</p>
+          <h1 className="mt-3 text-2xl font-semibold">Supabase env variables are not set</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-300">
+            Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `frontend/.env`, then restart the Vite dev server.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
+    return <LoadingScreen />;
   }
+
+  const protectedProps = { loading, isAuthenticated, isOnboarded };
+  const publicProps = { loading, isAuthenticated };
 
   return (
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
-        <Route path="/login" element={<PublicRoute><LoginPage setIsAuthenticated={setIsAuthenticated} /></PublicRoute>} />
+        <Route path="/" element={<PublicRoute {...publicProps}><LandingPage /></PublicRoute>} />
+        <Route path="/login" element={<PublicRoute {...publicProps}><LoginPage setIsAuthenticated={setIsAuthenticated} /></PublicRoute>} />
         
         <Route 
           path="/two-factor" 
@@ -127,7 +143,7 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute {...protectedProps}>
               <DashboardPage />
             </ProtectedRoute>
           }
@@ -135,7 +151,7 @@ function App() {
         <Route
           path="/budget"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute {...protectedProps}>
               <BudgetPage />
             </ProtectedRoute>
           }
@@ -143,7 +159,7 @@ function App() {
         <Route
           path="/goals"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute {...protectedProps}>
               <GoalsPage />
             </ProtectedRoute>
           }
@@ -151,7 +167,7 @@ function App() {
         <Route
           path="/bills"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute {...protectedProps}>
               <BillsPage />
             </ProtectedRoute>
           }
@@ -159,16 +175,16 @@ function App() {
         <Route
           path="/chat"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute {...protectedProps}>
               <ChatPage />
             </ProtectedRoute>
           }
         />
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute {...protectedProps}><ProfilePage /></ProtectedRoute>} />
         <Route
           path="/transactions"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute {...protectedProps}>
               <TransactionsPage />
             </ProtectedRoute>
           }
