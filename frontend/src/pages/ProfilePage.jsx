@@ -260,7 +260,7 @@ const ProfilePage = () => {
           </Card>
 
           {/* Email Verification */}
-          <Card className="p-8 mb-6">
+          {false && <Card className="p-8 mb-6">
             <h2 className="text-2xl font-semibold text-white mb-6 flex items-center space-x-2">
               <Mail size={24} className="text-emerald-400" />
               <span>Email Verification</span>
@@ -335,7 +335,7 @@ const ProfilePage = () => {
                 {sendingOTP ? 'Sending...' : 'Send Verification Code'}
               </Button>
             )}
-          </Card>
+          </Card>}
 
           {/* Security & Status */}
           <Card className="p-8">

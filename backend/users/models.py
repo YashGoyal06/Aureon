@@ -20,7 +20,7 @@ class FinancialProfile(models.Model):
     credit_limit = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     
     # Verification Data (Mobile removed)
-    is_email_verified = models.BooleanField(default=False)
+    is_email_verified = models.BooleanField(default=True)
     email_otp = models.CharField(max_length=6, blank=True, null=True)
 
     # Onboarding status

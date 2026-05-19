@@ -37,7 +37,7 @@ class UserProfileView(APIView):
 def generate_otp():
     return str(random.randint(100000, 999999))
 
-# --- 3. Send Email OTP View ---
+# --- 3. Send Email OTP View (Bypassed) ---
 class SendEmailOTPView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -47,96 +47,32 @@ class SendEmailOTPView(APIView):
         if not hasattr(user, 'profile'):
             FinancialProfile.objects.create(user=user)
         
-        otp = generate_otp()
-        user.profile.email_otp = otp
+        # Auto-verify email
+        user.profile.is_email_verified = True
         user.profile.save()
         
-        try:
-            subject = 'Aureon - Verify Your Identity'
-            user_name = user.email.split('@')[0]
-            
-            # OTP HTML Template
-            html_message = f"""
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body {{ margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; color: #e2e8f0; }}
-                    .email-wrapper {{ width: 100%; background-color: #0f172a; padding: 40px 0; }}
-                    .email-content {{ max-width: 500px; margin: 0 auto; background-color: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }}
-                    .header {{ background-color: #1e293b; padding: 30px 0; text-align: center; border-bottom: 1px solid #334155; }}
-                    .logo-text {{ font-size: 24px; font-weight: 700; color: #10b981; letter-spacing: 2px; text-transform: uppercase; text-decoration: none; }}
-                    .body-content {{ padding: 40px 30px; text-align: center; }}
-                    .greeting {{ font-size: 18px; color: #f8fafc; margin-bottom: 16px; }}
-                    .otp-box {{ background-color: #0f172a; border: 1px dashed #10b981; border-radius: 8px; padding: 20px; margin: 0 auto 30px; max-width: 200px; }}
-                    .otp-code {{ font-family: 'Courier New', monospace; font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #10b981; margin: 0; }}
-                    .footer {{ padding: 24px; background-color: #0f172a; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #334155; }}
-                </style>
-            </head>
-            <body>
-                <div class="email-wrapper">
-                    <div class="email-content">
-                        <div class="header"><div class="logo-text">AUREON</div></div>
-                        <div class="body-content">
-                            <h2 class="greeting">Verify your email</h2>
-                            <p style="color: #94a3b8; margin-bottom: 30px;">Hello <strong>{user_name}</strong>,<br>Use the code below to complete your sign-in.</p>
-                            <div class="otp-box"><div class="otp-code">{otp}</div></div>
-                            <p style="font-size: 13px; color: #ef4444;">⏳ This code expires in 10 minutes.</p>
-                        </div>
-                        <div class="footer"><p>&copy; 2025 Aureon Financial.</p></div>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """
-            
-            send_mail(
-                subject=subject,
-                message=f"Your Aureon verification code is: {otp}",
-                html_message=html_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
-            
-            return Response({'message': 'OTP sent successfully', 'email': user.email})
-            
-        except Exception as e:
-            return Response({'error': str(e)}, status=500)
+        return Response({
+            'message': 'Email verification bypassed. Auto-verified.',
+            'email': user.email,
+            'is_email_verified': True
+        })
 
-# --- 4. Verify Email OTP View (Updated with Welcome Email) ---
+# --- 4. Verify Email OTP View (Bypassed) ---
 class VerifyEmailOTPView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
-        otp = request.data.get('otp')
-        
-        if not otp:
-            return Response({'error': 'OTP is required'}, status=400)
-        
         user = request.user
         profile = user.profile
         
-        if profile.email_otp == otp:
-            # Check if this is the FIRST time they are verifying
-            is_first_verification = not profile.is_email_verified
-            
-            # Mark email as verified
-            profile.is_email_verified = True
-            profile.email_otp = None
-            profile.save()
-            
-            # --- SEND WELCOME EMAIL IF FIRST TIME ---
-            if is_first_verification:
-                self.send_welcome_email(user)
-            
-            return Response({
-                'message': 'Email verified successfully',
-                'is_email_verified': True
-            })
-        else:
-            return Response({'error': 'Invalid OTP'}, status=400)
+        profile.is_email_verified = True
+        profile.email_otp = None
+        profile.save()
+        
+        return Response({
+            'message': 'Email verified successfully (bypassed)',
+            'is_email_verified': True
+        })
 
     def send_welcome_email(self, user):
         """Helper to send the welcome email"""
