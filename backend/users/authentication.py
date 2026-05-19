@@ -154,11 +154,21 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         
         # 6. Find or Create the User
         try:
-            user, created = User.objects.get_or_create(
-                id=user_id,
-                defaults={'email': email, 'username': email}
-            )
-            if created:
+            # Check if user already exists with this UUID
+            user = User.objects.filter(id=user_id).first()
+            if not user:
+                # Check if a user with the same email or username exists (stale user)
+                stale_user = User.objects.filter(username=email).first() or User.objects.filter(email=email).first()
+                if stale_user:
+                    print(f"[AUTH DEBUG] ⚠️ Stale user found with different UUID (existing: {stale_user.id}, new: {user_id}). Deleting stale user.")
+                    stale_user.delete()
+                
+                # Create the new user with the new UUID
+                user = User.objects.create(
+                    id=user_id,
+                    email=email,
+                    username=email
+                )
                 print(f"[AUTH DEBUG] ✅ Created new user: {email}")
             else:
                 print(f"[AUTH DEBUG] ✅ Found existing user: {email}")
