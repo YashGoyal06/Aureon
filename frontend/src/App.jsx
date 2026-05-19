@@ -26,50 +26,44 @@ const LoadingScreen = () => {
 
   useEffect(() => {
     // 1. Initial Scale & Rotate Entrance for Emblem
-    animate({
-      targets: '.emblem-container',
+    animate('.emblem-container', {
       scale: [0, 1],
       rotate: [0, 360],
       duration: 1800,
-      easing: 'easeOutElastic(1, .6)',
+      ease: 'outElastic',
     });
 
     // 2. Continuous rotating dashed ring
-    animate({
-      targets: '.rotating-ring',
+    animate('.rotating-ring', {
       rotate: '360deg',
       duration: 15000,
       loop: true,
-      easing: 'linear',
+      ease: 'linear',
     });
 
     // 3. Glowing breathing pulse
-    animate({
-      targets: '.emblem-glow',
+    animate('.emblem-glow', {
       opacity: [0.3, 0.85],
       scale: [0.96, 1.04],
       duration: 1600,
       direction: 'alternate',
       loop: true,
-      easing: 'easeInOutQuad',
+      ease: 'inOutQuad',
     });
 
     // 4. Loading Percentage Counter
-    const counterObj = { val: 0 };
-    animate({
-      targets: counterObj,
-      val: 100,
-      round: 1,
+    const counterObj = { value: 0 };
+    animate(counterObj, {
+      value: 100,
       duration: 3200,
-      easing: 'easeInOutQuad',
-      update: () => {
-        setProgress(counterObj.val);
+      ease: 'inOutQuad',
+      onUpdate: () => {
+        setProgress(Math.round(counterObj.value));
       },
     });
 
     // 5. Rise and Fade Golden Floating Money Particles
-    animate({
-      targets: '.wealth-particle',
+    animate('.wealth-particle', {
       translateY: [0, -280],
       translateX: function() { return Math.floor(Math.random() * 120) - 60; },
       opacity: [
@@ -81,7 +75,7 @@ const LoadingScreen = () => {
       duration: function() { return Math.floor(Math.random() * 1600) + 2600; },
       delay: stagger(180),
       loop: true,
-      easing: 'easeOutQuad',
+      ease: 'outQuad',
     });
   }, []);
 
