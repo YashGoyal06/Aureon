@@ -83,6 +83,7 @@ class Subscription(models.Model):
     def __str__(self):
         return f"{self.name} - {self.user.email}"
 
+from decimal import Decimal
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from django.db.models import Sum
@@ -93,22 +94,24 @@ def store_original_amount(sender, instance, **kwargs):
     if instance.pk:
         try:
             original = Transaction.objects.get(pk=instance.pk)
-            instance._original_amount = original.amount
+            instance._original_amount = Decimal(str(original.amount))
         except Transaction.DoesNotExist:
-            instance._original_amount = 0
+            instance._original_amount = Decimal('0.00')
     else:
-        instance._original_amount = 0
+        instance._original_amount = Decimal('0.00')
 
 @receiver(post_save, sender=Transaction)
 def update_profile_balances(sender, instance, created, **kwargs):
     try:
         profile, _ = FinancialProfile.objects.get_or_create(user=instance.user)
+        instance_amount = Decimal(str(instance.amount))
+        
         if created:
-            profile.cash_available += instance.amount
-            profile.net_worth += instance.amount
+            profile.cash_available += instance_amount
+            profile.net_worth += instance_amount
         else:
-            original_amount = getattr(instance, '_original_amount', 0)
-            diff = instance.amount - original_amount
+            original_amount = Decimal(str(getattr(instance, '_original_amount', Decimal('0.00'))))
+            diff = instance_amount - original_amount
             profile.cash_available += diff
             profile.net_worth += diff
         profile.save()
@@ -119,8 +122,9 @@ def update_profile_balances(sender, instance, created, **kwargs):
 def update_profile_balances_on_delete(sender, instance, **kwargs):
     try:
         profile, _ = FinancialProfile.objects.get_or_create(user=instance.user)
-        profile.cash_available -= instance.amount
-        profile.net_worth -= instance.amount
+        instance_amount = Decimal(str(instance.amount))
+        profile.cash_available -= instance_amount
+        profile.net_worth -= instance_amount
         profile.save()
     except Exception as e:
         print("Error in update_profile_balances_on_delete signal:", e)
