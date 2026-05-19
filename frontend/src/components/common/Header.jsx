@@ -122,8 +122,8 @@ const Header = ({ user }) => {
                   <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-amber-300" />
                 </Button>
               </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content align="end" sideOffset={12} className="w-80 overflow-hidden rounded-xl border border-white/10 bg-slate-950/96 p-2 text-slate-100 shadow-2xl backdrop-blur-xl">
+            <DropdownMenu.Portal>
+                <DropdownMenu.Content align="end" sideOffset={12} className="z-[9999] w-80 overflow-hidden rounded-xl border border-white/10 bg-slate-950/96 p-2 text-slate-100 shadow-2xl backdrop-blur-xl">
                   <div className="px-3 py-2">
                     <p className="text-sm font-semibold text-white">Notifications</p>
                     <p className="text-xs text-slate-500">Financial signals that need attention</p>
@@ -146,7 +146,7 @@ const Header = ({ user }) => {
                 </button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
-                <DropdownMenu.Content align="end" sideOffset={12} className="w-64 overflow-hidden rounded-xl border border-white/10 bg-slate-950/96 p-2 text-slate-100 shadow-2xl backdrop-blur-xl">
+                <DropdownMenu.Content align="end" sideOffset={12} className="z-[9999] w-64 overflow-hidden rounded-xl border border-white/10 bg-slate-950/96 p-2 text-slate-100 shadow-2xl backdrop-blur-xl">
                   <div className="flex items-center gap-3 px-3 py-3">
                     {renderAvatar('h-11 w-11')}
                     <div className="min-w-0">
