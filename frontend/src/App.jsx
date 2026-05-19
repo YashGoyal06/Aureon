@@ -18,9 +18,68 @@ import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
 import TransactionsPage from './pages/TransactionsPage';
 
-const LoadingScreen = () => (
-  <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>
-);
+import { Coins, Sparkles } from 'lucide-react';
+
+const LoadingScreen = () => {
+  return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Background Decorative Gradients */}
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-emerald-400/5 rounded-full blur-[120px] pointer-events-none" />
+
+      {/* Main Container */}
+      <div className="flex flex-col items-center z-10 text-center max-w-sm px-6">
+        
+        {/* Money Themed Glowing Animated Logo */}
+        <div className="relative mb-8">
+          {/* Pulsing Outer Ring */}
+          <div className="absolute inset-0 rounded-full bg-emerald-400/20 blur-md animate-ping" style={{ animationDuration: '3s' }} />
+          
+          {/* Rotating Ring */}
+          <div className="absolute -inset-3 rounded-full border border-dashed border-emerald-400/30 animate-spin" style={{ animationDuration: '12s' }} />
+          
+          {/* Main Gold/Emerald Emblem */}
+          <div className="relative w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-400 to-emerald-300 p-0.5 shadow-[0_0_50px_rgba(52,211,153,0.3)] flex items-center justify-center">
+            <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center">
+              {/* Inner Metallic Coin Icon */}
+              <div className="relative flex items-center justify-center text-emerald-400">
+                <Coins size={44} className="animate-pulse" style={{ animationDuration: '2s' }} />
+                <Sparkles size={16} className="absolute -top-1 -right-1 text-amber-300 animate-bounce" style={{ animationDuration: '3s' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Brand Casing */}
+        <h1 className="text-2xl font-bold tracking-[0.2em] text-white uppercase mb-2">
+          Aureon
+        </h1>
+        <p className="text-[11px] font-semibold text-emerald-400 tracking-[0.3em] uppercase mb-8">
+          Wealth Workspace
+        </p>
+
+        {/* Animated Loading Bar */}
+        <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden mb-6 relative border border-white/5">
+          <div className="absolute top-0 bottom-0 left-0 w-1/2 bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full animate-[loading_1.5s_infinite_ease-in-out]" />
+        </div>
+
+        {/* Loading Message */}
+        <p className="text-xs text-slate-400 font-medium tracking-wide animate-pulse">
+          Securely synchronizing your financial vault...
+        </p>
+      </div>
+
+      {/* Inline animation inject */}
+      <style>{`
+        @keyframes loading {
+          0% { left: -50%; width: 30%; }
+          50% { width: 50%; }
+          100% { left: 120%; width: 30%; }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 const ProtectedRoute = ({ children, loading, isAuthenticated, isOnboarded }) => {
   if (loading) return <LoadingScreen />;
