@@ -18,156 +18,154 @@ import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
 import TransactionsPage from './pages/TransactionsPage';
 
-import { animate, stagger } from 'animejs';
-import { Coins, Sparkles, Shield, TrendingUp, DollarSign } from 'lucide-react';
+import { animate } from 'animejs';
 
 const LoadingScreen = () => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // 1. Initial Scale & Rotate Entrance for Emblem
-    animate('.emblem-container', {
-      scale: [0, 1],
-      rotate: [0, 360],
-      duration: 1800,
-      ease: 'outElastic',
+    // 1. Monogram scale & fade entrance
+    animate('.monogram-container', {
+      scale: [0.95, 1],
+      opacity: [0, 1],
+      duration: 1200,
+      ease: 'outQuart',
     });
 
-    // 2. Continuous rotating dashed ring
-    animate('.rotating-ring', {
+    // 2. Razor-thin path drawing vector animations
+    animate('.emblem-path-outer', {
+      strokeDashoffset: 0,
+      duration: 2000,
+      ease: 'outCubic',
+    });
+
+    animate('.emblem-path-inner', {
+      strokeDashoffset: 0,
+      duration: 1600,
+      delay: 300,
+      ease: 'outCubic',
+    });
+
+    // 3. Faint precision circle rotators (very slow, thin)
+    animate('.precision-dial', {
       rotate: '360deg',
-      duration: 15000,
+      duration: 25000,
       loop: true,
       ease: 'linear',
     });
 
-    // 3. Glowing breathing pulse
-    animate('.emblem-glow', {
-      opacity: [0.3, 0.85],
-      scale: [0.96, 1.04],
-      duration: 1600,
+    // 4. Subtle ambient opacity breathing
+    animate('.monogram-wrapper', {
+      opacity: [0.75, 1],
+      duration: 2200,
       direction: 'alternate',
       loop: true,
       ease: 'inOutQuad',
     });
 
-    // 4. Loading Percentage Counter
+    // 5. High-precision percentage counter
     const counterObj = { value: 0 };
     animate(counterObj, {
       value: 100,
-      duration: 3200,
-      ease: 'inOutQuad',
+      duration: 3500,
+      ease: 'inOutCubic',
       onUpdate: () => {
         setProgress(Math.round(counterObj.value));
       },
     });
-
-    // 5. Rise and Fade Golden Floating Money Particles
-    animate('.wealth-particle', {
-      translateY: [0, -280],
-      translateX: function() { return Math.floor(Math.random() * 120) - 60; },
-      opacity: [
-        { value: 0, duration: 0 },
-        { value: 0.8, duration: 400 },
-        { value: 0, duration: 2400 }
-      ],
-      scale: function() { return Math.random() * 0.8 + 0.6; },
-      duration: function() { return Math.floor(Math.random() * 1600) + 2600; },
-      delay: stagger(180),
-      loop: true,
-      ease: 'outQuad',
-    });
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Decorative Blur Backgrounds */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/12 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-emerald-400/6 rounded-full blur-[140px] pointer-events-none" />
-
-      {/* Floating Golden Money Particles */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        {[...Array(12)].map((_, i) => (
-          <div
-            key={i}
-            className="wealth-particle absolute bottom-20 left-1/2 -translate-x-1/2 text-amber-400/60"
-            style={{
-              left: `${35 + (i * 5)}%`,
-            }}
-          >
-            {i % 3 === 0 ? (
-              <DollarSign size={16} />
-            ) : i % 3 === 1 ? (
-              <Coins size={16} />
-            ) : (
-              <Sparkles size={14} />
-            )}
-          </div>
-        ))}
-      </div>
+    <div className="min-h-screen bg-[#06080C] flex flex-col items-center justify-center relative overflow-hidden">
+      {/* 1. Precision Grid Background (Institutional Desk Look) */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none z-0" />
+      
+      {/* 2. Soft Ambient Bottom Lighting Reflection */}
+      <div className="absolute bottom-0 inset-x-0 h-[30vh] bg-gradient-to-t from-emerald-500/3 via-transparent to-transparent pointer-events-none blur-[100px] z-0" />
 
       {/* Main Container */}
       <div className="flex flex-col items-center z-10 text-center max-w-sm px-6">
         
-        {/* Money Themed Glowing Animated Logo */}
-        <div className="relative mb-8 emblem-container scale-0">
-          {/* Pulsing Outer Glow (animejs animated) */}
-          <div className="emblem-glow absolute inset-px rounded-full bg-emerald-400/25 blur-lg" />
-          
-          {/* Rotating Ring (animejs animated) */}
-          <div className="rotating-ring absolute -inset-3.5 rounded-full border-2 border-dashed border-emerald-400/20" />
-          
-          {/* Main Gold/Emerald Emblem */}
-          <div className="relative w-28 h-28 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-400 to-amber-300 p-0.5 shadow-[0_0_60px_rgba(52,211,153,0.35)] flex items-center justify-center">
-            <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center">
-              {/* Inner Metallic Coin Icon */}
-              <div className="relative flex items-center justify-center text-emerald-400">
-                <Coins size={52} className="animate-pulse" style={{ animationDuration: '3s' }} />
-                <Sparkles size={18} className="absolute -top-1 -right-1 text-amber-300 animate-bounce" style={{ animationDuration: '2.5s' }} />
-              </div>
-            </div>
+        {/* Monogram Wrapper */}
+        <div className="monogram-wrapper mb-8">
+          {/* Custom SVG Monogram */}
+          <div className="monogram-container relative w-20 h-20 opacity-0 scale-95 flex items-center justify-center">
+            
+            {/* Spinning Precision Dial (Faint Platinum Circle Frame) */}
+            <svg 
+              className="precision-dial absolute inset-0 w-full h-full text-white/10" 
+              viewBox="0 0 60 60" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="30" cy="30" r="28" stroke="currentColor" strokeWidth="0.75" strokeDasharray="3 9" />
+            </svg>
+
+            {/* Core Geometric Emblem (Self-Drawing) */}
+            <svg 
+              className="w-16 h-16" 
+              viewBox="0 0 60 60" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {/* Reference Hairlines */}
+              <line x1="0" y1="30" x2="60" y2="30" stroke="white" strokeOpacity="0.03" strokeWidth="0.75" />
+              <line x1="30" y1="0" x2="30" y2="60" stroke="white" strokeOpacity="0.03" strokeWidth="0.75" />
+
+              {/* Outer Triangle (Platinum/Slate-100) */}
+              <path 
+                d="M30 14L46 44H14L30 14Z" 
+                stroke="#E2E8F0" 
+                strokeWidth="1.25" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="emblem-path-outer"
+                style={{ strokeDasharray: 120, strokeDashoffset: 120 }}
+              />
+              {/* Inner Upward wealth chevron (Champagne Gold) */}
+              <path 
+                d="M22 36L30 22L38 36" 
+                stroke="#C5A880" 
+                strokeWidth="1.25" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="emblem-path-inner"
+                style={{ strokeDasharray: 50, strokeDashoffset: 50 }}
+              />
+            </svg>
           </div>
         </div>
 
-        {/* Brand Casing */}
-        <h1 className="text-3xl font-extrabold tracking-[0.25em] text-white uppercase mb-2">
+        {/* Text Header (Quiet Luxury Typographics) */}
+        <h1 className="text-xl font-light tracking-[0.35em] text-white uppercase mb-1">
           Aureon
         </h1>
-        <p className="text-[11px] font-bold text-emerald-400 tracking-[0.4em] uppercase mb-8">
-          Wealth Workspace
+        <p className="text-[9px] font-semibold text-slate-500 tracking-[0.45em] uppercase mb-10">
+          Institutional Wealth
         </p>
 
-        {/* Elegant Animated Progress Bar */}
-        <div className="w-56 h-1.5 bg-white/5 rounded-full overflow-hidden mb-4 relative border border-white/5 shadow-inner">
+        {/* Precision Progress Status Bar */}
+        <div className="w-64 flex justify-between items-center text-[9px] tracking-[0.25em] uppercase text-slate-500 font-semibold mb-2.5">
+          <span>SYSTEM INTEGRITY</span>
+          <span className="font-mono text-slate-400 font-bold">{progress}%</span>
+        </div>
+
+        {/* Single-Pixel Matte Timeline Bar */}
+        <div className="w-64 h-[1px] bg-white/10 rounded-full overflow-hidden relative">
           <div 
-            className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-emerald-500 via-emerald-400 to-amber-300 rounded-full transition-all duration-75 ease-out shadow-[0_0_12px_rgba(52,211,153,0.5)]" 
+            className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-slate-400 to-[#C5A880] transition-all duration-75 ease-out" 
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        {/* Progress Percentage */}
-        <div className="text-lg font-bold text-white tracking-widest mb-6 font-mono">
-          <span className="text-emerald-400">{progress}</span>
-          <span className="text-slate-500 text-sm ml-1">%</span>
-        </div>
-
-        {/* Loading Message */}
-        <p className="text-[13px] text-slate-300 font-semibold tracking-wide h-6">
-          {progress < 30 ? (
-            <span className="flex items-center gap-2 justify-center">
-              <Shield size={14} className="text-emerald-400" />
-              Initializing secure key vault...
-            </span>
-          ) : progress < 70 ? (
-            <span className="flex items-center gap-2 justify-center">
-              <Coins size={14} className="text-amber-400" />
-              Decrypting ledger balance...
-            </span>
+        {/* Quiet Luxury Terminal Output Message */}
+        <p className="text-[9px] tracking-[0.2em] text-[#C5A880]/80 uppercase mt-3 h-4 font-medium transition-all duration-300">
+          {progress < 35 ? (
+            '// ESTABLISHING SECURE HANDSHAKE'
+          ) : progress < 75 ? (
+            '// SYNCHRONIZING LEDGER BALANCES'
           ) : (
-            <span className="flex items-center gap-2 justify-center">
-              <TrendingUp size={14} className="text-emerald-300 animate-pulse" />
-              Optimizing financial engine...
-            </span>
+            '// WEALTH INTERFACE VAULT OPERATIONAL'
           )}
         </p>
       </div>
