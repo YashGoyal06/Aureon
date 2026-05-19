@@ -1,0 +1,22 @@
+{
+  "appId": "com.aureon.app",
+  "appName": "Aureon",
+  "webDir": "dist",
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#050608"
+    },
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "autoHide": true,
+      "launchShowDuration": 0,
+      "backgroundColor": "#050608",
+      "showSpinner": false
+    }
+  },
+  "android": {
+    "backgroundColor": "#050608",
+    "allowMixedContent": true
+  }
+}

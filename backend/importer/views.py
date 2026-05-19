@@ -1,5 +1,9 @@
 import csv
 import io
+import os
+import requests
+import json
+import re
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
@@ -179,5 +183,142 @@ Text:
                 "count": transactions_created
             })
             
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class StatementScanView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        base64_image = request.data.get('image')
+        if not base64_image:
+            return Response({"error": "No image data provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        hf_api_key = os.getenv('HUGGINGFACE_API_KEY')
+        if not hf_api_key:
+            return Response({"error": "Hugging Face API Key is not configured on the server."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Step 1: Use Free Dedicated OCR Engine to extract raw text
+        ocr_url = "https://api.ocr.space/parse/image"
+        
+        # OCR space requires the prefix
+        full_base64 = f"data:image/jpeg;base64,{base64_image}" if not base64_image.startswith('data:') else base64_image
+        
+        ocr_payload = {
+            "apikey": "helloworld", # OCR.space public free testing key
+            "base64Image": full_base64,
+            "OCREngine": "2"
+        }
+        
+        try:
+            ocr_response = requests.post(ocr_url, data=ocr_payload)
+            if ocr_response.status_code == 200:
+                ocr_result = ocr_response.json()
+                parsed_text = ocr_result.get("ParsedResults", [{}])[0].get("ParsedText", "")
+            else:
+                parsed_text = ""
+        except Exception as e:
+            print("OCR Engine Error:", e)
+            parsed_text = ""
+            
+        if not parsed_text or not parsed_text.strip():
+            return Response({"error": "Could not read any text from the image. Please try a clearer photo."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Step 2: Use Hugging Face TEXT ONLY model (Llama 3.3) to format the OCR data into JSON
+        prompt = f"""You are a highly intelligent financial parsing assistant. I have used OCR to extract text from a bank statement or receipt.
+Here is the raw text extracted from the document:
+
+{parsed_text}
+
+CRITICAL INSTRUCTIONS:
+1. Auto-Correct OCR Typos: The OCR might misread letters or symbols (e.g. "Stnrbucks" -> "Starbucks", or "12.0Q" -> "12.00"). You MUST logically correct merchant names and clean up random noise or garbage text.
+2. Guess missing data: If a transaction is clearly missing a decimal point in the amount based on context, fix it. If the date is missing, infer it from the context or assume 2026.
+3. Extract all valid transactions and return the output STRICTLY as a JSON array of objects. Do not include markdown formatting like ```json.
+Each object must have these exact keys:
+- "date": string in YYYY-MM-DD
+- "merchant": clean string name (auto-corrected)
+- "amount": positive number (auto-corrected)
+- "type": "expense" or "income"
+- "category_key": "dining", "income", "transportation", "shopping", etc.
+- "category": the display name of the category
+"""
+
+        API_URL = "https://router.huggingface.co/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {hf_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": "meta-llama/Llama-3.3-70B-Instruct",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 1500,
+            "temperature": 0.1
+        }
+
+        try:
+            response = requests.post(API_URL, headers=headers, json=payload)
+            if response.status_code == 200:
+                result = response.json()
+                bot_reply = result['choices'][0]['message']['content'].strip() if ('choices' in result and len(result['choices']) > 0) else ""
+                
+                # Robustly extract JSON array using regex
+                json_match = re.search(r'\[.*\]', bot_reply, re.DOTALL)
+                if json_match:
+                    bot_reply = json_match.group(0)
+                
+                try:
+                    transactions_data = json.loads(bot_reply)
+                    return Response({"transactions": transactions_data})
+                except Exception as e:
+                    print(f"JSON Parse Error: {e}. Bot replied: {bot_reply}")
+                    return Response({"error": "AI could not properly format the extracted transactions."}, status=status.HTTP_502_BAD_GATEWAY)
+            else:
+                return Response({"error": f"AI format error: {response.text}"}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class StatementConfirmView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        transactions = request.data.get('transactions', [])
+        if not transactions:
+            return Response({"error": "No transactions provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        transactions_created = 0
+        try:
+            from django.db import transaction as db_transaction
+            
+            with db_transaction.atomic():
+                for tx in transactions:
+                    date_obj = datetime.strptime(tx['date'], '%Y-%m-%d').date()
+                    merchant = tx['merchant']
+                    amount = Decimal(str(tx['amount']))
+                    
+                    if tx.get('type') == 'expense':
+                        amount = -abs(amount)
+                    elif tx.get('type') == 'income':
+                        amount = abs(amount)
+                        
+                    category = tx.get('category', 'Miscellaneous')
+                    category_key = tx.get('category_key', 'miscellaneous')
+                    
+                    Transaction.objects.create(
+                        user=request.user,
+                        date=date_obj,
+                        merchant=merchant,
+                        amount=amount,
+                        category=category,
+                        category_key=category_key,
+                    )
+                    transactions_created += 1
+                    
+            return Response({
+                "message": f"Successfully imported {transactions_created} transactions.",
+                "count": transactions_created
+            })
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

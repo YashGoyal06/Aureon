@@ -54,7 +54,7 @@ const Header = ({ user }) => {
 
   const renderAvatar = (size = 'h-9 w-9') => {
     if (user?.avatar) {
-      return <img src={user.avatar} alt={user.name || 'User'} className={cn(size, 'rounded-lg object-cover ring-1 ring-white/15')} />;
+      return <img src={user.avatar} alt={user.name || 'User'} referrerPolicy="no-referrer" className={cn(size, 'rounded-lg object-cover ring-1 ring-white/15')} />;
     }
 
     return (

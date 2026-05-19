@@ -1,7 +1,7 @@
 // src/pages/auth/LoginPage.jsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, ArrowLeft, Loader, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ArrowLeft, Loader, AlertCircle, Settings } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 const LoginPage = ({ setIsAuthenticated }) => {
@@ -10,6 +10,10 @@ const LoginPage = ({ setIsAuthenticated }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
+  // Dev settings
+  const [showDevSettings, setShowDevSettings] = useState(false);
+  const [customUrlInput, setCustomUrlInput] = useState(localStorage.getItem('custom_api_url') || '');
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -26,7 +30,6 @@ const LoginPage = ({ setIsAuthenticated }) => {
     setError('');
 
     try {
-      // This checks the database for the credentials
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
@@ -40,7 +43,9 @@ const LoginPage = ({ setIsAuthenticated }) => {
         navigate('/dashboard');
       }
     } catch (err) {
-      if (err.message.includes("Invalid login credentials")) {
+      if (err.message.includes("Failed to fetch")) {
+        setError("Failed to fetch. Your app cannot connect to the backend server. Tap the Gear icon in the top right to verify your backend server's IP address!");
+      } else if (err.message.includes("Invalid login credentials")) {
         setError("Invalid email or password. Please try again.");
       } else if (err.message.includes("Email not confirmed")) {
         setError("Your email is not verified.");
@@ -55,9 +60,12 @@ const LoginPage = ({ setIsAuthenticated }) => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
+      const isMobile = window.Capacitor || window.location.origin.includes('capacitor') || (window.location.origin.includes('http://localhost') && !window.location.port);
+      const redirectUrl = isMobile ? 'aureon://login' : `${window.location.origin}/dashboard`;
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/dashboard` },
+        options: { redirectTo: redirectUrl },
       });
       if (error) throw error;
     } catch (err) {
@@ -87,7 +95,18 @@ const LoginPage = ({ setIsAuthenticated }) => {
           <span>Back to Home</span>
         </button>
 
-        <div className="bg-black/40 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/10 animate-[slideUp_0.8s_ease-out]">
+        <div className="bg-black/40 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/10 relative animate-[slideUp_0.8s_ease-out]">
+          
+          {/* Subtle Dev Settings button */}
+          <button 
+            type="button"
+            onClick={() => setShowDevSettings(true)}
+            className="absolute top-4 right-4 text-white/20 hover:text-emerald-400 transition-all duration-300 z-20"
+            title="Developer Settings"
+          >
+            <Settings size={18} />
+          </button>
+
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg animate-[scaleIn_0.6s_ease-out] hover:scale-110 transition-transform duration-300">
               <Lock size={28} className="text-white" />
@@ -194,6 +213,67 @@ const LoginPage = ({ setIsAuthenticated }) => {
           </div>
         </div>
       </div>
+
+      {/* Developer Settings Modal */}
+      {showDevSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-[fadeIn_0.3s_ease-out]">
+          <div className="bg-black/90 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative">
+            <h2 className="text-xl font-bold text-white mb-2 flex items-center space-x-2">
+              <Settings className="text-emerald-400" size={20} />
+              <span>Dev Settings</span>
+            </h2>
+            <p className="text-xs text-gray-400 mb-4">
+              Override your backend API base URL directly. Perfect if your Mac IP address changed. Make sure to specify the protocol (e.g. <code>http://192.168.31.92:8000</code>).
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Backend Base URL</label>
+                <input 
+                  type="text" 
+                  value={customUrlInput}
+                  onChange={(e) => setCustomUrlInput(e.target.value)}
+                  placeholder="e.g. http://192.168.31.92:8000"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem('custom_api_url', customUrlInput.trim());
+                    setShowDevSettings(false);
+                    window.location.reload();
+                  }}
+                  className="flex-1 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold text-sm hover:scale-[1.02] active:scale-95 transition-all duration-300"
+                >
+                  Save & Reload
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem('custom_api_url');
+                    setCustomUrlInput('');
+                    setShowDevSettings(false);
+                    window.location.reload();
+                  }}
+                  className="px-3 py-2 border border-white/10 text-gray-400 hover:text-white rounded-xl text-xs"
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDevSettings(false)}
+                  className="px-3 py-2 border border-white/10 text-gray-400 hover:text-white rounded-xl text-xs"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

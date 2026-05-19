@@ -75,10 +75,10 @@ const AddTransactionModal = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-black/90 border border-white/10 rounded-2xl max-w-2xl w-full my-8 shadow-2xl overflow-hidden animate-slide-in">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 sm:p-4">
+      <div className="bg-black/90 sm:border border-white/10 sm:rounded-2xl w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-2xl shadow-2xl flex flex-col animate-slide-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
+        <div className="flex items-center justify-between p-6 border-b border-white/10 shrink-0 mt-8 sm:mt-0">
           <h2 className="text-xl font-bold text-white">Add Transaction</h2>
           <button
             onClick={onClose}
@@ -89,7 +89,7 @@ const AddTransactionModal = ({ onClose }) => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1 pb-24 sm:pb-6">
           {/* Type Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
