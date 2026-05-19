@@ -18,157 +18,92 @@ import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
 import TransactionsPage from './pages/TransactionsPage';
 
-import { animate } from 'animejs';
-
 const LoadingScreen = () => {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    // 1. Monogram scale & fade entrance
-    animate('.monogram-container', {
-      scale: [0.95, 1],
-      opacity: [0, 1],
-      duration: 1200,
-      ease: 'outQuart',
-    });
-
-    // 2. Razor-thin path drawing vector animations
-    animate('.emblem-path-outer', {
-      strokeDashoffset: 0,
-      duration: 2000,
-      ease: 'outCubic',
-    });
-
-    animate('.emblem-path-inner', {
-      strokeDashoffset: 0,
-      duration: 1600,
-      delay: 300,
-      ease: 'outCubic',
-    });
-
-    // 3. Faint precision circle rotators (very slow, thin)
-    animate('.precision-dial', {
-      rotate: '360deg',
-      duration: 25000,
-      loop: true,
-      ease: 'linear',
-    });
-
-    // 4. Subtle ambient opacity breathing
-    animate('.monogram-wrapper', {
-      opacity: [0.75, 1],
-      duration: 2200,
-      direction: 'alternate',
-      loop: true,
-      ease: 'inOutQuad',
-    });
-
-    // 5. High-precision percentage counter
-    const counterObj = { value: 0 };
-    animate(counterObj, {
-      value: 100,
-      duration: 3500,
-      ease: 'inOutCubic',
-      onUpdate: () => {
-        setProgress(Math.round(counterObj.value));
-      },
-    });
-  }, []);
-
   return (
-    <div className="min-h-screen bg-[#06080C] flex flex-col items-center justify-center relative overflow-hidden">
-      {/* 1. Precision Grid Background (Institutional Desk Look) */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none z-0" />
+    <div className="min-h-screen bg-[#050608] flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Subtle Precision Grid Background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff01_1px,transparent_1px),linear-gradient(to_bottom,#ffffff01_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-0" />
       
-      {/* 2. Soft Ambient Bottom Lighting Reflection */}
-      <div className="absolute bottom-0 inset-x-0 h-[30vh] bg-gradient-to-t from-emerald-500/3 via-transparent to-transparent pointer-events-none blur-[100px] z-0" />
+      {/* Soft Platinum ambient top spotlight reflection */}
+      <div className="absolute top-0 inset-x-0 h-[40vh] bg-gradient-to-b from-white/[0.02] via-transparent to-transparent pointer-events-none blur-[100px] z-0" />
 
-      {/* Main Container */}
-      <div className="flex flex-col items-center z-10 text-center max-w-sm px-6">
+      {/* Main Centered Content */}
+      <div className="flex flex-col items-center z-10 text-center select-none">
         
-        {/* Monogram Wrapper */}
-        <div className="monogram-wrapper mb-8">
-          {/* Custom SVG Monogram */}
-          <div className="monogram-container relative w-20 h-20 opacity-0 scale-95 flex items-center justify-center">
-            
-            {/* Spinning Precision Dial (Faint Platinum Circle Frame) */}
-            <svg 
-              className="precision-dial absolute inset-0 w-full h-full text-white/10" 
-              viewBox="0 0 60 60" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle cx="30" cy="30" r="28" stroke="currentColor" strokeWidth="0.75" strokeDasharray="3 9" />
-            </svg>
-
-            {/* Core Geometric Emblem (Self-Drawing) */}
-            <svg 
-              className="w-16 h-16" 
-              viewBox="0 0 60 60" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Reference Hairlines */}
-              <line x1="0" y1="30" x2="60" y2="30" stroke="white" strokeOpacity="0.03" strokeWidth="0.75" />
-              <line x1="30" y1="0" x2="30" y2="60" stroke="white" strokeOpacity="0.03" strokeWidth="0.75" />
-
-              {/* Outer Triangle (Platinum/Slate-100) */}
-              <path 
-                d="M30 14L46 44H14L30 14Z" 
-                stroke="#E2E8F0" 
-                strokeWidth="1.25" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className="emblem-path-outer"
-                style={{ strokeDasharray: 120, strokeDashoffset: 120 }}
-              />
-              {/* Inner Upward wealth chevron (Champagne Gold) */}
-              <path 
-                d="M22 36L30 22L38 36" 
-                stroke="#C5A880" 
-                strokeWidth="1.25" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className="emblem-path-inner"
-                style={{ strokeDasharray: 50, strokeDashoffset: 50 }}
-              />
-            </svg>
+        {/* Sleek Minimalist Geometric Logo Element */}
+        <div className="relative w-12 h-12 mb-8 flex items-center justify-center">
+          {/* Subtle concentric frame */}
+          <div className="absolute inset-0 rounded-full border border-white/5" />
+          {/* Active gold/platinum geometric cross vector */}
+          <div className="w-4 h-4 relative">
+            {/* Horizontal line segment */}
+            <div className="absolute top-1/2 left-0 right-0 h-[1.5px] -translate-y-1/2 bg-gradient-to-r from-slate-400 to-[#C5A880] rounded-full animate-vector-h" />
+            {/* Vertical line segment */}
+            <div className="absolute left-1/2 top-0 bottom-0 w-[1.5px] -translate-x-1/2 bg-gradient-to-b from-slate-400 to-[#C5A880] rounded-full animate-vector-v" />
           </div>
         </div>
 
-        {/* Text Header (Quiet Luxury Typographics) */}
-        <h1 className="text-xl font-light tracking-[0.35em] text-white uppercase mb-1">
+        {/* Shimmering Metallic Brand Text */}
+        <h1 className="text-sm font-light tracking-[0.45em] text-slate-300 uppercase mb-2 animate-shimmer bg-clip-text text-transparent bg-gradient-to-r from-slate-400 via-white to-slate-400 bg-[length:200%_auto]">
           Aureon
         </h1>
-        <p className="text-[9px] font-semibold text-slate-500 tracking-[0.45em] uppercase mb-10">
-          Institutional Wealth
+        
+        {/* Luxury Subtitle */}
+        <p className="text-[8px] font-bold text-slate-500 tracking-[0.4em] uppercase mb-8">
+          Wealth Intelligence
         </p>
 
-        {/* Precision Progress Status Bar */}
-        <div className="w-64 flex justify-between items-center text-[9px] tracking-[0.25em] uppercase text-slate-500 font-semibold mb-2.5">
-          <span>SYSTEM INTEGRITY</span>
-          <span className="font-mono text-slate-400 font-bold">{progress}%</span>
+        {/* Sleek, 1px Linear/Vercel-style CSS Loader Bar */}
+        <div className="w-36 h-[1.5px] bg-white/5 rounded-full overflow-hidden relative">
+          <div className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-slate-500 to-[#C5A880] rounded-full w-1/3 animate-progress-slide" />
         </div>
 
-        {/* Single-Pixel Matte Timeline Bar */}
-        <div className="w-64 h-[1px] bg-white/10 rounded-full overflow-hidden relative">
-          <div 
-            className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-slate-400 to-[#C5A880] transition-all duration-75 ease-out" 
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        {/* Quiet Luxury Terminal Output Message */}
-        <p className="text-[9px] tracking-[0.2em] text-[#C5A880]/80 uppercase mt-3 h-4 font-medium transition-all duration-300">
-          {progress < 35 ? (
-            '// ESTABLISHING SECURE HANDSHAKE'
-          ) : progress < 75 ? (
-            '// SYNCHRONIZING LEDGER BALANCES'
-          ) : (
-            '// WEALTH INTERFACE VAULT OPERATIONAL'
-          )}
+        {/* Quiet Luxury Connection Message */}
+        <p className="text-[8px] tracking-[0.25em] text-slate-500 uppercase mt-5 animate-pulse-soft">
+          Secure Ledger Connection Active
         </p>
       </div>
+
+      {/* Embedded High-Performance CSS Keyframes */}
+      <style>{`
+        @keyframes progress-slide {
+          0% { left: -40%; width: 30%; }
+          50% { width: 45%; }
+          100% { left: 110%; width: 25%; }
+        }
+        @keyframes shimmer {
+          0% { background-position: 0% center; }
+          100% { background-position: -200% center; }
+        }
+        @keyframes pulse-soft {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.85; }
+        }
+        @keyframes vector-h {
+          0%, 100% { transform: scaleX(0.7) translateY(-50%); }
+          50% { transform: scaleX(1.3) translateY(-50%); }
+        }
+        @keyframes vector-v {
+          0%, 100% { transform: scaleY(0.7) translateX(-50%); }
+          50% { transform: scaleY(1.3) translateX(-50%); }
+        }
+        
+        .animate-progress-slide {
+          animation: progress-slide 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+        }
+        .animate-shimmer {
+          animation: shimmer 4s linear infinite;
+        }
+        .animate-pulse-soft {
+          animation: pulse-soft 2.5s ease-in-out infinite;
+        }
+        .animate-vector-h {
+          animation: vector-h 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        .animate-vector-v {
+          animation: vector-v 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+      `}</style>
     </div>
   );
 };
