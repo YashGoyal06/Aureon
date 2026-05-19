@@ -26,7 +26,19 @@ export const apiFetch = async (endpoint, options = {}) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `API Error: ${response.statusText}`);
+      let errMsg = '';
+      if (errorData.error) {
+        errMsg = errorData.error;
+      } else if (errorData.detail) {
+        errMsg = errorData.detail;
+      } else if (errorData.message) {
+        errMsg = errorData.message;
+      } else if (typeof errorData === 'object' && Object.keys(errorData).length > 0) {
+        errMsg = Object.entries(errorData)
+          .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+          .join('; ');
+      }
+      throw new Error(errMsg || `API Error: ${response.statusText}`);
     }
 
     return response.json();
