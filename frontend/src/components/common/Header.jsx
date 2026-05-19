@@ -117,29 +117,6 @@ const Header = ({ user }) => {
           <div className="flex items-center gap-2">
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <Button variant="ghost" size="icon" className="relative text-slate-300">
-                  <Bell size={19} />
-                  <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-amber-300" />
-                </Button>
-              </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-                <DropdownMenu.Content align="end" sideOffset={12} className="z-[9999] w-80 overflow-hidden rounded-xl border border-white/10 bg-slate-950/96 p-2 text-slate-100 shadow-2xl backdrop-blur-xl">
-                  <div className="px-3 py-2">
-                    <p className="text-sm font-semibold text-white">Notifications</p>
-                    <p className="text-xs text-slate-500">Financial signals that need attention</p>
-                  </div>
-                  {notifications.map((notification) => (
-                    <DropdownMenu.Item key={notification.id} className="rounded-lg px-3 py-3 outline-none transition hover:bg-white/7">
-                      <p className="text-sm text-slate-200">{notification.text}</p>
-                      <p className="mt-1 text-xs text-slate-500">{notification.time}</p>
-                    </DropdownMenu.Item>
-                  ))}
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
                 <button className="hidden items-center gap-2 rounded-lg px-2 py-1.5 transition hover:bg-white/7 lg:flex">
                   {renderAvatar()}
                   <span className="max-w-24 truncate text-sm font-medium text-white">{user?.name?.split(' ')[0] || 'User'}</span>
