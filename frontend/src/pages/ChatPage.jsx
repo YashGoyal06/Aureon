@@ -101,8 +101,18 @@ const ChatPage = () => {
             return (
               <Reveal key={message.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                 <div className={`flex max-w-[82%] items-start gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${isUser ? 'border-white/15 bg-white/8' : 'border-emerald-300/20 bg-emerald-300/10'}`}>
-                    {isUser ? <User size={18} className="text-slate-300" /> : <Bot size={18} className="text-emerald-200" />}
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg overflow-hidden border ${isUser ? 'border-white/15 bg-white/8' : 'border-emerald-300/20 bg-emerald-300/10'}`}>
+                    {isUser ? (
+                      user?.avatar ? (
+                        <img src={user.avatar} alt="Me" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-emerald-400 text-xs font-bold text-slate-950">
+                          {(user?.name || 'U').charAt(0).toUpperCase()}
+                        </div>
+                      )
+                    ) : (
+                      <Bot size={18} className="text-emerald-200" />
+                    )}
                   </div>
                   <div>
                     <div className={`rounded-xl px-4 py-3 text-sm leading-6 ${isUser ? 'bg-emerald-300 text-slate-950' : 'border border-white/10 bg-white/[0.05] text-slate-100'}`}>
