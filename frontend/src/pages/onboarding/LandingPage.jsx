@@ -159,7 +159,7 @@ const LandingPage = () => {
         }
       `}</style>
 
-      <div className="h-screen w-screen overflow-hidden relative flex flex-col">
+      <div className="min-h-screen w-full overflow-y-auto md:h-screen md:overflow-hidden relative flex flex-col">
         {/* Background Image */}
         <div 
           className="absolute inset-0 z-0"
@@ -173,7 +173,7 @@ const LandingPage = () => {
 
         {/* Top Right Corner Image */}
         <div 
-          className="absolute z-20 animate-fade-in-down"
+          className="absolute z-20 animate-fade-in-down hidden md:block"
           style={{
             top: '-35%',
             right: '-20%',
@@ -192,20 +192,20 @@ const LandingPage = () => {
         </div>
 
         {/* Navbar */}
-        <nav className="absolute top-12 left-18 z-30 animate-fade-in-down w-1/2">
-          <div className="flex items-center justify-between px-8 py-4 bg-black/40 backdrop-blur-md border border-white/10 shadow-2xl ml-8" style={{ borderRadius: '9999px' }}>
+        <nav className="absolute top-6 left-4 right-4 md:top-12 md:left-18 md:w-1/2 md:ml-8 z-30 animate-fade-in-down">
+          <div className="flex items-center justify-between px-6 py-3 md:px-8 md:py-4 bg-black/40 backdrop-blur-md border border-white/10 shadow-2xl" style={{ borderRadius: '9999px' }}>
             
             <div className="flex items-center">
               <img 
                 src="/Aureon_logo.png" 
                 alt="Aureon Logo" 
-                className="h-10 w-10 rounded-full object-cover"
+                className="h-8 w-8 md:h-10 md:w-10 rounded-full object-cover"
               />
             </div>
 
             <button
               onClick={() => navigate('/login')}
-              className="text-white hover:text-gray-200 font-medium transition-all duration-300 hover:scale-105"
+              className="text-white hover:text-gray-200 text-sm md:text-base font-medium transition-all duration-300 hover:scale-105"
             >
               Sign In
             </button>
@@ -213,41 +213,50 @@ const LandingPage = () => {
         </nav>
 
         {/* Main Content */}
-        <div className="flex-1 relative z-10 flex items-center pl-16 md:pl-24 lg:pl-32">
-          <div className="relative flex items-center">
+        <div className="flex-1 relative z-10 flex items-center px-6 py-32 sm:pl-16 md:pl-24 lg:pl-32">
+          <div className="relative flex flex-col md:flex-row items-center w-full">
             {/* Left Column - AUREON Text and Tagline */}
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-start w-full md:w-auto">
               {/* AUREON Text */}
               <h1 
-                className="text-[10rem] md:text-[12rem] lg:text-[14rem] tracking-wider leading-none select-none uppercase animate-fade-in-left delay-200"
+                className="text-6xl sm:text-8xl md:text-[10rem] lg:text-[12rem] xl:text-[14rem] tracking-wider leading-none select-none uppercase animate-fade-in-left delay-200 mb-[-0.5rem] md:mb-[-1.5rem]"
                 style={{
                   color: '#ffffff',
                   textShadow: '0 0 40px rgb(0, 0, 0), 0 0 80px rgba(255, 255, 255, 0.15)',
                   fontFamily: '"Bebas Neue", sans-serif',
                   fontWeight: '400',
                   letterSpacing: '0.05em',
-                  fontStyle: 'normal',
-                  marginBottom: '-1.5rem'
+                  fontStyle: 'normal'
                 }}
               >
                 AUREON
               </h1>
 
               {/* Financial Highlight Tagline */}
-              <div className="animate-fade-in-up delay-600">
-                <p className="text-white/90 text-lg md:text-xl lg:text-2xl mb-50 font-light tracking-wide max-w-xl">
+              <div className="animate-fade-in-up delay-600 mt-2 md:mt-4">
+                <p className="text-white/90 text-base sm:text-lg md:text-xl lg:text-2xl mb-6 md:mb-12 font-light tracking-wide max-w-xs sm:max-w-md md:max-w-xl">
                   Track and manage your financial data with 
                   <span className="font-semibold text-white"> AI-powered </span>
                   intelligence
                 </p>
               </div>
+
+              {/* Mobile Get Started Button (Horizontal) */}
+              <div className="md:hidden animate-fade-in-up delay-800 w-full max-w-xs">
+                <button
+                  onClick={() => navigate('/onboarding/signup')}
+                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold text-lg hover:shadow-lg hover:shadow-emerald-500/50 transition-all duration-300 active:scale-95 border border-white/10"
+                >
+                  Get Started
+                </button>
+              </div>
             </div>
 
-            {/* Vertical Get Started Button */}
-            <div className="animate-float-button delay-800 ml-16">
+            {/* Desktop Vertical Get Started Button */}
+            <div className="hidden md:block animate-float-button delay-800 ml-16">
               <button
                 onClick={() => navigate('/onboarding/signup')}
-                className="px-8 py-3 mb-60 bg-black/10 backdrop-blur-sm text-white rounded-full font-bold text-xl hover:bg-black/20 transition-all shadow-2xl hover:scale-110 duration-300 relative border border-white/20 overflow-hidden group"
+                className="px-8 py-3 bg-black/10 backdrop-blur-sm text-white rounded-full font-bold text-xl hover:bg-black/20 transition-all shadow-2xl hover:scale-110 duration-300 relative border border-white/20 overflow-hidden group"
                 style={{
                   transform: 'rotate(-90deg)',
                   transformOrigin: 'center center',

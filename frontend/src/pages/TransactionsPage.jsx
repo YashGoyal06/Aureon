@@ -194,64 +194,104 @@ const TransactionsPage = () => {
         </div>
       </Card>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden bg-transparent border-0 md:bg-black/40 md:border md:border-white/10 md:p-4">
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="animate-spin text-emerald-300" size={36} />
           </div>
         ) : filteredTransactions.length === 0 ? (
-          <div className="py-20 text-center">
+          <div className="py-20 text-center bg-black/40 rounded-2xl border border-white/10">
             <AlertCircle className="mx-auto mb-3 text-slate-500" size={36} />
             <p className="text-slate-300">No transactions found.</p>
             <p className="mt-1 text-sm text-slate-500">Create one or import a CSV statement.</p>
           </div>
         ) : (
-          <TableContainer>
-            <Table sx={{ minWidth: 760 }}>
-              <TableHead>
-                <TableRow sx={{ '& th': { borderColor: 'rgba(255,255,255,0.08)', color: 'rgb(148 163 184)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' } }}>
-                  <TableCell>Date</TableCell>
-                  <TableCell>Merchant</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Method</TableCell>
-                  <TableCell align="right">Amount</TableCell>
-                  <TableCell align="center">Action</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredTransactions.map((t) => {
-                  const amount = Number(t.amount);
-                  const key = (t.category_key || '').toLowerCase();
-                  return (
-                    <TableRow key={t.id} sx={{ '& td': { borderColor: 'rgba(255,255,255,0.06)', color: 'white' }, '&:hover': { background: 'rgba(255,255,255,0.035)' } }}>
-                      <TableCell>{formatDate(t.date)}</TableCell>
-                      <TableCell>
-                        <p className="font-medium text-white">{t.merchant}</p>
-                        {t.note && <p className="mt-1 text-xs text-slate-500">{t.note}</p>}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge tone={categoryTone[key] || 'neutral'}>{t.category || 'Miscellaneous'}</Badge>
-                          {key && key !== 'miscellaneous' && <span className="text-[11px] text-slate-500">Smart category</span>}
-                        </div>
-                      </TableCell>
-                      <TableCell className="capitalize">{t.payment_method || 'cash'}</TableCell>
-                      <TableCell align="right">
-                        <span className={amount > 0 ? 'font-semibold text-emerald-300' : 'font-semibold text-white'}>
+          <>
+            {/* Mobile View: Transaction Cards */}
+            <div className="md:hidden space-y-3">
+              {filteredTransactions.map((t) => {
+                const amount = Number(t.amount);
+                const key = (t.category_key || '').toLowerCase();
+                return (
+                  <div key={t.id} className="p-4 rounded-xl border border-white/10 bg-black/40 backdrop-blur-xl hover:border-emerald-500/30 transition-all duration-300 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Badge tone={categoryTone[key] || 'neutral'}>{t.category || 'Miscellaneous'}</Badge>
+                        {key && key !== 'miscellaneous' && <span className="text-[10px] text-slate-500 bg-white/5 px-1.5 py-0.5 rounded">Smart</span>}
+                      </div>
+                      <span className="text-xs text-slate-400 font-mono">{formatDate(t.date)}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <p className="font-semibold text-white text-sm truncate">{t.merchant}</p>
+                        {t.note && <p className="text-xs text-slate-400 mt-1 truncate">{t.note}</p>}
+                        <p className="text-xs text-slate-500 mt-1 capitalize font-mono">{t.payment_method || 'cash'}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={amount > 0 ? 'font-semibold text-emerald-300 text-sm' : 'font-semibold text-white text-sm'}>
                           {amount > 0 ? '+' : '-'}₹{Math.abs(amount).toFixed(2)}
                         </span>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Button onClick={() => handleDelete(t.id)} variant="ghost" size="icon" className="text-red-200">
-                          <Trash2 size={16} />
+                        <Button onClick={() => handleDelete(t.id)} variant="ghost" size="icon" className="text-red-200 h-8 w-8 hover:bg-red-500/10 rounded-lg">
+                          <Trash2 size={15} />
                         </Button>
-                      </TableCell>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop View: MUI Table */}
+            <div className="hidden md:block">
+              <TableContainer>
+                <Table sx={{ minWidth: 760 }}>
+                  <TableHead>
+                    <TableRow sx={{ '& th': { borderColor: 'rgba(255,255,255,0.08)', color: 'rgb(148 163 184)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' } }}>
+                      <TableCell>Date</TableCell>
+                      <TableCell>Merchant</TableCell>
+                      <TableCell>Category</TableCell>
+                      <TableCell>Method</TableCell>
+                      <TableCell align="right">Amount</TableCell>
+                      <TableCell align="center">Action</TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {filteredTransactions.map((t) => {
+                      const amount = Number(t.amount);
+                      const key = (t.category_key || '').toLowerCase();
+                      return (
+                        <TableRow key={t.id} sx={{ '& td': { borderColor: 'rgba(255,255,255,0.06)', color: 'white' }, '&:hover': { background: 'rgba(255,255,255,0.035)' } }}>
+                          <TableCell>{formatDate(t.date)}</TableCell>
+                          <TableCell>
+                            <p className="font-medium text-white">{t.merchant}</p>
+                            {t.note && <p className="mt-1 text-xs text-slate-500">{t.note}</p>}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Badge tone={categoryTone[key] || 'neutral'}>{t.category || 'Miscellaneous'}</Badge>
+                              {key && key !== 'miscellaneous' && <span className="text-[11px] text-slate-500">Smart category</span>}
+                            </div>
+                          </TableCell>
+                          <TableCell className="capitalize">{t.payment_method || 'cash'}</TableCell>
+                          <TableCell align="right">
+                            <span className={amount > 0 ? 'font-semibold text-emerald-300' : 'font-semibold text-white'}>
+                              {amount > 0 ? '+' : '-'}₹{Math.abs(amount).toFixed(2)}
+                            </span>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Button onClick={() => handleDelete(t.id)} variant="ghost" size="icon" className="text-red-200">
+                              <Trash2 size={16} />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </div>
+          </>
         )}
       </Card>
 

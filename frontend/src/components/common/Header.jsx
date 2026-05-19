@@ -90,7 +90,7 @@ const Header = ({ user }) => {
 
   return (
     <Tooltip.Provider delayDuration={180}>
-      <header className="fixed left-0 right-0 top-0 z-50 px-4 pt-4 sm:px-6">
+      <header className="fixed left-0 right-0 top-0 z-[1000] px-4 pt-4 sm:px-6">
         <nav className="mx-auto flex max-w-7xl items-center justify-between rounded-xl border border-white/10 bg-slate-950/84 px-3 py-3 shadow-[0_20px_60px_rgba(2,6,23,0.38)] backdrop-blur-xl">
           <button onClick={() => navigate('/dashboard')} className="flex items-center gap-3 rounded-lg px-2 py-1.5 text-left transition hover:bg-white/7">
             <img src="/Aureon_logo.png" alt="Aureon" className="h-8 w-8 rounded-lg object-cover" />
