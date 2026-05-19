@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from django.db.models import Sum
 from .models import Transaction, Budget, Goal, Subscription
 from .serializers import TransactionSerializer, BudgetSerializer, GoalSerializer, SubscriptionSerializer
+from .category_engine import categorize_transaction, should_auto_categorize
 
 class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
@@ -13,6 +14,22 @@ class TransactionViewSet(viewsets.ModelViewSet):
         return Transaction.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
+        category = serializer.validated_data.get('category')
+        category_key = serializer.validated_data.get('category_key')
+
+        if should_auto_categorize(category, category_key):
+            prediction = categorize_transaction(
+                serializer.validated_data.get('merchant'),
+                serializer.validated_data.get('note'),
+                serializer.validated_data.get('amount'),
+            )
+            serializer.save(
+                user=self.request.user,
+                category=prediction['category'],
+                category_key=prediction['category_key'],
+            )
+            return
+
         serializer.save(user=self.request.user)
 
 class BudgetViewSet(viewsets.ModelViewSet):
@@ -59,4 +76,3 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-

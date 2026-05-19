@@ -31,14 +31,14 @@ class ChatbotView(APIView):
         
         context_prompt = f"""You are Aureon's premium AI Financial Assistant. You give concise, professional, and helpful financial advice.
 User Profile:
-- Available Cash: ${cash_available}
-- Net Worth: ${net_worth}
+- Available Cash: ₹{cash_available}
+- Net Worth: ₹{net_worth}
 Active Budgets:
 {budget_context if budget_context else "No active budgets."}
 Recent Transactions:
 {tx_context if tx_context else "No recent transactions."}
 
-Based strictly on this data, answer the user's question. Do not make up data not present here.
+Based strictly on this data, answer the user's question in rupees (₹). Do not make up data not present here.
 User Question: "{user_message}"
 """
 
@@ -101,8 +101,8 @@ class AIInsightsView(APIView):
 
         context_prompt = f"""You are Aureon's premium AI Financial Assistant. Based on the user's financial profile, generate exactly three helpful financial insights.
 User Profile:
-- Available Cash: ${cash_available}
-- Net Worth: ${net_worth}
+- Available Cash: ₹{cash_available}
+- Net Worth: ₹{net_worth}
 Active Budgets:
 {budget_context if budget_context else "No active budgets."}
 Recent Transactions:
@@ -113,14 +113,14 @@ Provide the output strictly as a JSON array of three objects. Do not include mar
 - "type": one of "success", "warning", "suggestion", "pattern"
 - "title": a very short title
 - "message": a helpful one-sentence message
-- "savings": optional, an integer number of potential savings in dollars (e.g. 42)
+- "savings": optional, an integer number of potential savings in rupees (e.g. 42)
 - "detail": a short secondary detail string (e.g. "Keep it up!")
 - "options": optional array of 2 strings if type is "suggestion"
 
 Example:
 [
   {{"id": 1, "type": "success", "title": "Great news!", "message": "You spent 15% less this week on food.", "savings": 25, "detail": "Keep it up!"}},
-  {{"id": 2, "type": "warning", "title": "Watch out!", "message": "Your subscriptions total $45 this month.", "detail": "Consider cancelling unused ones."}},
+  {{"id": 2, "type": "warning", "title": "Watch out!", "message": "Your subscriptions total ₹45 this month.", "detail": "Consider cancelling unused ones."}},
   {{"id": 3, "type": "suggestion", "title": "Smart Suggestion", "message": "You have extra cash.", "options": ["Invest it", "Add to goal"]}}
 ]
 """

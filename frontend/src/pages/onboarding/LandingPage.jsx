@@ -173,13 +173,7 @@ const LandingPage = () => {
 
         {/* Top Right Corner Image */}
         <div 
-          className="absolute z-20 animate-fade-in-down hidden md:block"
-          style={{
-            top: '-35%',
-            right: '-20%',
-            width: '900px',
-            height: '900px'
-          }}
+          className="absolute z-20 animate-fade-in-down w-[280px] h-[280px] top-[-8%] right-[-12%] sm:w-[420px] sm:h-[420px] sm:top-[-12%] sm:right-[-15%] md:w-[600px] md:h-[600px] md:top-[-18%] md:right-[-18%] lg:w-[900px] lg:h-[900px] lg:top-[-30%] lg:right-[-20%] pointer-events-none"
         >
           <img 
             src="/landing-page-top-element.png" 

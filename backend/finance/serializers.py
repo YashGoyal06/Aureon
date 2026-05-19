@@ -6,6 +6,10 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = '__all__'
         read_only_fields = ('user',)
+        extra_kwargs = {
+            'category': {'required': False, 'allow_blank': True},
+            'category_key': {'required': False, 'allow_blank': True},
+        }
 
 class BudgetSerializer(serializers.ModelSerializer):
     class Meta:
