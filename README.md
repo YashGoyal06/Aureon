@@ -1,20 +1,23 @@
 <div align="center">
 
-# Aureon
+<br />
 
-**A full-stack web application built for performance, clarity, and scale.**
+# AUREON
+
+### Full-stack web application &mdash; built for clarity, velocity, and production.
 
 <br />
 
-[![Stars](https://img.shields.io/github/stars/YashGoyal06/Aureon?style=flat-square&color=0f0f0f&labelColor=1a1a1a)](https://github.com/YashGoyal06/Aureon/stargazers)
-[![Forks](https://img.shields.io/github/forks/YashGoyal06/Aureon?style=flat-square&color=0f0f0f&labelColor=1a1a1a)](https://github.com/YashGoyal06/Aureon/network/members)
-[![Issues](https://img.shields.io/github/issues/YashGoyal06/Aureon?style=flat-square&color=0f0f0f&labelColor=1a1a1a)](https://github.com/YashGoyal06/Aureon/issues)
-[![License](https://img.shields.io/github/license/YashGoyal06/Aureon?style=flat-square&color=0f0f0f&labelColor=1a1a1a)](./LICENSE)
-[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=flat-square&logo=vercel&logoColor=white)](https://aureon-rho.vercel.app)
+[![Stars](https://img.shields.io/github/stars/YashGoyal06/Aureon?style=for-the-badge&color=111111&labelColor=000000&logo=github&logoColor=white)](https://github.com/YashGoyal06/Aureon/stargazers)
+[![Forks](https://img.shields.io/github/forks/YashGoyal06/Aureon?style=for-the-badge&color=111111&labelColor=000000&logo=git&logoColor=white)](https://github.com/YashGoyal06/Aureon/network/members)
+[![Issues](https://img.shields.io/github/issues/YashGoyal06/Aureon?style=for-the-badge&color=111111&labelColor=000000&logo=githubactions&logoColor=white)](https://github.com/YashGoyal06/Aureon/issues)
+[![License](https://img.shields.io/github/license/YashGoyal06/Aureon?style=for-the-badge&color=111111&labelColor=000000)](./LICENSE)
 
 <br />
 
-[Live Demo](https://aureon-rho.vercel.app) &nbsp;&middot;&nbsp; [Report a Bug](https://github.com/YashGoyal06/Aureon/issues) &nbsp;&middot;&nbsp; [Request a Feature](https://github.com/YashGoyal06/Aureon/issues)
+[![Live](https://img.shields.io/badge/Live%20Preview-aureon--rho.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://aureon-rho.vercel.app)
+
+<br />
 
 </div>
 
@@ -22,36 +25,83 @@
 
 ## Overview
 
-Aureon is a production-grade full-stack application with a JavaScript frontend and a Python-powered backend. The architecture is designed around a clean separation of concerns — the frontend handles UI composition and client-side state while the backend manages data processing, business logic, and API delivery.
+Aureon is a decoupled full-stack application — a React/Vite frontend consuming a Python/FastAPI backend, connected through a well-defined HTTP interface. The architecture enforces a hard boundary between the presentation layer and business logic, making both sides independently testable, scalable, and deployable.
 
-The project prioritises maintainability from the ground up: modular directory structure, reusable component design, and a consistent code style that scales without friction. Deployment is fully automated via Vercel, with the backend designed for containerised or serverless environments.
+The codebase is structured for longevity: every directory has a single purpose, components are authored for reuse, and no layer reaches into the concerns of another. The result is a system that new contributors can navigate in minutes and senior engineers can extend without hesitation.
 
-Whether you are running it locally or deploying to production, the setup is intentionally lean with no unnecessary abstractions or framework overhead.
+Deployed to Vercel with zero-config CI from the main branch.
 
 ---
 
 ## Features
 
-- **Responsive Interface** — Fluid layouts that adapt across devices without compromising visual fidelity
-- **Scalable Architecture** — Decoupled frontend and backend designed to grow independently
-- **Reusable Components** — UI built with composition in mind; shared logic extracted into utilities and hooks
-- **Clean Codebase** — Consistent naming conventions, clear module boundaries, and minimal dead code
-- **Performance-First** — Optimised asset delivery, lazy loading, and efficient API communication
-- **SEO-Friendly Setup** — Structured markup and metadata configuration ready for indexing
-- **Production-Ready Structure** — Environment-aware configuration, build pipeline, and deployment setup included
+<br />
+
+<table>
+  <tr>
+    <td width="50%">
+      <b>Responsive Interface</b><br />
+      <sub>Fluid, device-agnostic layouts with no breakpoint hacks or layout jank at any viewport width.</sub>
+    </td>
+    <td width="50%">
+      <b>Decoupled Architecture</b><br />
+      <sub>Frontend and backend are fully independent — each has its own dependency tree, config, and deploy pipeline.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <b>Reusable Component System</b><br />
+      <sub>UI is built from composable primitives. Shared logic lives in hooks and utilities, not inside components.</sub>
+    </td>
+    <td width="50%">
+      <b>Performance-First Delivery</b><br />
+      <sub>Vite's build pipeline with code splitting, lazy routes, and optimised asset handling out of the box.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <b>SEO-Ready Structure</b><br />
+      <sub>Semantic HTML, structured metadata, and open graph configuration wired up from the start.</sub>
+    </td>
+    <td width="50%">
+      <b>Production-Grade Setup</b><br />
+      <sub>Environment-separated config, a working build pipeline, and deployment targets documented and tested.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <b>Clean, Navigable Codebase</b><br />
+      <sub>Consistent naming, explicit module boundaries, and no speculative abstractions cluttering the structure.</sub>
+    </td>
+    <td width="50%">
+      <b>Typed API Contract</b><br />
+      <sub>FastAPI generates a live OpenAPI schema at <code>/docs</code> — the frontend and backend always agree on shape.</sub>
+    </td>
+  </tr>
+</table>
+
+<br />
 
 ---
 
 ## Tech Stack
 
-| Layer           | Technology              |
-| --------------- | ----------------------- |
-| Frontend        | React, Vite             |
-| Backend         | Python, FastAPI          |
-| Database        | PostgreSQL               |
-| Styling         | CSS Modules / Tailwind  |
-| Animation       | Framer Motion           |
-| Version Control | Git, GitHub             |
+<div align="center">
+
+<br />
+
+| Layer           | Technology |
+| :-------------- | :--------- |
+| **Frontend**    | ![React](https://img.shields.io/badge/React-0D1117?style=flat-square&logo=react&logoColor=58C4DC) ![Vite](https://img.shields.io/badge/Vite-0D1117?style=flat-square&logo=vite&logoColor=BD34FE) |
+| **Backend**     | ![Python](https://img.shields.io/badge/Python-0D1117?style=flat-square&logo=python&logoColor=3776AB) ![FastAPI](https://img.shields.io/badge/FastAPI-0D1117?style=flat-square&logo=fastapi&logoColor=00C7B7) |
+| **Database**    | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-0D1117?style=flat-square&logo=postgresql&logoColor=4169E1) |
+| **Styling**     | ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-0D1117?style=flat-square&logo=tailwindcss&logoColor=06B6D4) |
+| **Animation**   | ![Framer](https://img.shields.io/badge/Framer_Motion-0D1117?style=flat-square&logo=framer&logoColor=white) |
+| **Deployment**  | ![Vercel](https://img.shields.io/badge/Vercel-0D1117?style=flat-square&logo=vercel&logoColor=white) |
+
+<br />
+
+</div>
 
 ---
 
@@ -59,37 +109,31 @@ Whether you are running it locally or deploying to production, the setup is inte
 
 ```
 Aureon/
-├── frontend/
+├── frontend/                   # React + Vite application
 │   ├── public/
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   │   ├── common/
-│   │   │   └── layout/
-│   │   ├── hooks/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   ├── store/
-│   │   ├── styles/
-│   │   ├── utils/
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── .env.example
-│   ├── index.html
-│   └── package.json
+│   └── src/
+│       ├── components/
+│       │   ├── common/         # Shared primitives (Button, Input, Modal...)
+│       │   └── layout/         # Structural components (Navbar, Sidebar, Footer)
+│       ├── hooks/              # Custom React hooks
+│       ├── pages/              # Route-level components
+│       ├── services/           # API client and request abstractions
+│       ├── store/              # Global state management
+│       ├── styles/             # Global CSS / Tailwind config
+│       ├── utils/              # Pure functions, formatters, constants
+│       ├── App.jsx
+│       └── main.jsx
 │
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   │   └── routes/
-│   │   ├── core/
-│   │   │   └── config.py
-│   │   ├── models/
-│   │   ├── schemas/
-│   │   ├── services/
-│   │   └── main.py
-│   ├── .env.example
-│   └── requirements.txt
+├── backend/                    # Python + FastAPI service
+│   └── app/
+│       ├── api/
+│       │   └── routes/         # Endpoint definitions
+│       ├── core/
+│       │   └── config.py       # Settings and environment loading
+│       ├── models/             # ORM / database models
+│       ├── schemas/            # Pydantic request/response schemas
+│       ├── services/           # Business logic layer
+│       └── main.py
 │
 ├── .gitignore
 └── README.md
@@ -97,81 +141,84 @@ Aureon/
 
 ---
 
-## Installation
+## Getting Started
 
-**Prerequisites:** Node.js 18+, Python 3.10+, Git
+**Prerequisites:** Node.js `>= 18`, Python `>= 3.10`, Git
+
+**Clone and install:**
 
 ```bash
-# Clone the repository
 git clone https://github.com/YashGoyal06/Aureon.git
-
-# Navigate to the project root
 cd Aureon
-
-# Install frontend dependencies
-cd frontend && npm install
-
-# Install backend dependencies
-cd ../backend && pip install -r requirements.txt
 ```
-
-**Start the development servers:**
 
 ```bash
-# Frontend (from /frontend)
-npm run dev
-
-# Backend (from /backend)
-uvicorn app.main:app --reload
+# Frontend
+cd frontend
+npm install
 ```
 
-The frontend will be available at `http://localhost:5173` and the API at `http://localhost:8000`.
+```bash
+# Backend
+cd ../backend
+pip install -r requirements.txt
+```
+
+**Run development servers:**
+
+```bash
+# Terminal 1 — Frontend
+cd frontend && npm run dev
+# Runs on http://localhost:5173
+
+# Terminal 2 — Backend
+cd backend && uvicorn app.main:app --reload
+# Runs on http://localhost:8000
+# API docs at http://localhost:8000/docs
+```
 
 ---
 
 ## Environment Variables
 
-Create `.env` files in both `frontend/` and `backend/` based on the examples below.
+Copy and populate the example files before running either service.
 
 **`frontend/.env`**
-
 ```env
 VITE_API_BASE_URL=http://localhost:8000
 VITE_APP_ENV=development
 ```
 
 **`backend/.env`**
-
 ```env
 APP_ENV=development
 DATABASE_URL=postgresql://user:password@localhost:5432/aureon
-SECRET_KEY=your-secret-key-here
+SECRET_KEY=change-this-in-production
 ALLOWED_ORIGINS=http://localhost:5173
 ```
+
+> Never commit `.env` files. Both are listed in `.gitignore`.
 
 ---
 
 ## Build & Deployment
 
-**Frontend production build:**
+**Production build:**
 
 ```bash
 cd frontend
 npm run build
+# Output: frontend/dist/
 ```
 
-Static output is written to `frontend/dist/` and is ready for deployment to any static host.
+**Deployment targets:**
 
-**Deployment platforms:**
-
-| Platform | Use Case              | Notes                                  |
-| -------- | --------------------- | -------------------------------------- |
-| Vercel   | Frontend              | Zero-config, auto-deploy on push       |
-| Netlify  | Frontend              | Drag-and-drop or Git-based deploy      |
-| Render   | Backend (Python)      | Native Python support, free tier       |
-| Railway  | Full stack or backend | Simple environment variable management |
-
-The live deployment is hosted at [aureon-rho.vercel.app](https://aureon-rho.vercel.app).
+| Platform   | Target             | Notes                                              |
+| :--------- | :----------------- | :------------------------------------------------- |
+| **Vercel** | Frontend           | Auto-deploys from `main`. Zero configuration.      |
+| **Netlify**| Frontend           | Equivalent to Vercel; useful as a fallback target. |
+| **Render** | Backend (Python)   | Native ASGI support; connects to managed Postgres. |
+| **Railway**| Backend + Database | One-environment setup for staging; free tier.      |
 
 ---
 
@@ -179,58 +226,65 @@ The live deployment is hosted at [aureon-rho.vercel.app](https://aureon-rho.verc
 
 <div align="center">
 
-> **Preview Coming Soon**
-> Replace this section with actual screenshots once the UI is finalised.
+<br />
 
-```
-[ Add screenshot here ]
-![Aureon Preview](./docs/preview.png)
-```
+*Application screenshots will be added on stable release.*
+
+<!-- Replace with actual screenshot once available -->
+<!-- ![Aureon — Dashboard](./docs/assets/preview-dashboard.png) -->
+
+<br />
 
 </div>
 
 ---
 
-## Development Principles
+## Engineering Principles
 
-Aureon is developed with a set of explicit engineering values rather than informal conventions:
+These aren't aspirational guidelines — they are the constraints that shaped every decision in this codebase.
 
-- **Separation of Concerns** — UI, state, business logic, and network calls live in distinct layers with defined interfaces between them
-- **Reusable Architecture** — Every component, hook, and utility is authored to be independent and composable
-- **Modular Design** — Features are self-contained; adding or removing functionality does not require restructuring unrelated parts of the codebase
-- **Maintainable Code** — Clarity is treated as a first-class constraint; complex logic is documented, and side effects are isolated
-- **Performance-First Development** — Performance is a design consideration at the architecture level, not an afterthought addressed through patches
+**Separation of Concerns** &nbsp;|&nbsp; The UI layer has no knowledge of data fetching logic. The API layer has no knowledge of rendering. Each layer exposes a contract and nothing more.
+
+**Modular by Default** &nbsp;|&nbsp; Features are self-contained. A module can be removed, moved, or replaced without touching anything adjacent to it.
+
+**Explicit Over Implicit** &nbsp;|&nbsp; Configuration is visible. Side effects are isolated. Nothing happens for reasons that require reading three files to understand.
+
+**Maintainability as a Constraint** &nbsp;|&nbsp; Code is written to be read six months later by someone who wasn't in the room. Comments explain intent, not mechanics.
+
+**Performance Is Designed, Not Patched** &nbsp;|&nbsp; Rendering strategy, data shape, and API contract are chosen with performance in mind, not tuned after the fact.
 
 ---
 
 ## Contributing
 
-Contributions are welcome and reviewed carefully.
+1. Fork the repository and create a branch: `git checkout -b feat/your-feature-name`
+2. Make focused, well-scoped changes — one concern per pull request
+3. Write a clear commit message: `git commit -m "feat: describe the change and its purpose"`
+4. Push and open a pull request against `main` with context on what changed and why
 
-1. Fork the repository
-2. Create a feature branch — `git checkout -b feature/your-feature`
-3. Commit your changes — `git commit -m 'feat: describe your change'`
-4. Push to your branch — `git push origin feature/your-feature`
-5. Open a Pull Request with a clear description of the change and its motivation
-
-Please follow existing code conventions and keep pull requests focused on a single concern. Large, unfocused PRs will be asked to be split before review.
+PRs that mix unrelated changes will be asked to be split. Code review prioritises correctness, clarity, and fit with the existing architecture — not line count.
 
 ---
 
 ## License
 
-Distributed under the MIT License. See [`LICENSE`](./LICENSE) for details.
+Released under the [MIT License](./LICENSE).
 
 ---
 
 <div align="center">
 
-**Author**
+<br />
 
-[Yash Goyal](https://github.com/YashGoyal06) &nbsp;&middot;&nbsp; [LinkedIn](https://linkedin.com/in/yashgoyal06)
+Designed and built by **[Yash Goyal](https://github.com/YashGoyal06)**
+
+[![GitHub](https://img.shields.io/badge/GitHub-YashGoyal06-0D1117?style=flat-square&logo=github&logoColor=white)](https://github.com/YashGoyal06)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0D1117?style=flat-square&logo=linkedin&logoColor=0A66C2)](https://linkedin.com/in/yashgoyal06)
 
 <br />
 
-<sub>Built and maintained with care.</sub>
+<sub>If this project was useful, consider leaving a star.</sub>
+
+<br />
 
 </div>
