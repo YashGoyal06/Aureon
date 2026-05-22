@@ -9,7 +9,7 @@ const SignUpPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [signupSuccess, setSignupSuccess] = useState(false); // New state for success message
-  
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -64,7 +64,7 @@ const SignUpPage = () => {
   return (
     <div className="min-h-screen relative py-8 px-4 flex items-center justify-center">
       {/* Background Image */}
-      <div 
+      <div
         className="fixed inset-0 z-0 animate-[fadeIn_0.8s_ease-out]"
         style={{
           backgroundImage: 'url("/common-bg.png")',
@@ -86,7 +86,7 @@ const SignUpPage = () => {
         )}
 
         <div className="bg-black/40 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/10 animate-[slideUp_0.8s_ease-out]">
-          
+
           {/* --- SUCCESS STATE --- */}
           {signupSuccess ? (
             <div className="text-center py-8 animate-[scaleIn_0.5s_ease-out]">
@@ -95,7 +95,7 @@ const SignUpPage = () => {
               </div>
               <h2 className="text-3xl font-bold text-white mb-4">Signup Successful!</h2>
               <p className="text-gray-300 mb-8">
-                Your account has been created. <br/>
+                Your account has been created. <br />
                 Redirecting you to the login page...
               </p>
               <div className="flex justify-center">
@@ -133,7 +133,7 @@ const SignUpPage = () => {
                       name="fullName"
                       value={formData.fullName}
                       onChange={handleChange}
-                      placeholder="John Doe"
+                      placeholder="Crevix"
                       required
                       className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all duration-300 backdrop-blur-sm hover:bg-white/10 focus:scale-[1.02]"
                     />
@@ -149,7 +149,7 @@ const SignUpPage = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="name@example.com"
+                      placeholder="name@crevix-studio.in"
                       required
                       className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all duration-300 backdrop-blur-sm hover:bg-white/10 focus:scale-[1.02]"
                     />
